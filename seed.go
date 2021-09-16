@@ -6,6 +6,7 @@ import (
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/simon-engledew/seed/distribution"
 	"io"
+	"math/rand"
 	"strconv"
 	"strings"
 )
@@ -16,10 +17,6 @@ type ColumnGenerator interface {
 
 type Dependent interface {
 	DependsOn() TableName
-}
-
-type Distributed interface {
-	Distribution() distribution.Distribution
 }
 
 type TableName string
@@ -51,8 +48,7 @@ func newCallableColumn(value func() string) ColumnGenerator {
 }
 
 type primaryColumn struct {
-	count        uint64
-	distribution distribution.Distribution
+	count uint64
 }
 
 func (c *primaryColumn) Value(ctx context.Context) string {
@@ -60,19 +56,15 @@ func (c *primaryColumn) Value(ctx context.Context) string {
 	return strconv.FormatUint(c.count, 10)
 }
 
-func PrimaryKey(dist distribution.Distribution) ColumnGenerator {
-	return &primaryColumn{
-		distribution: dist,
-	}
-}
-
-func (c *primaryColumn) Distribution() distribution.Distribution {
-	return c.distribution
+func PrimaryKey() ColumnGenerator {
+	return &primaryColumn{}
 }
 
 type contextKey string
 
 var parentKey contextKey = "parent"
+
+type mappedValues map[ColumnName]string
 
 type dependentColumn struct {
 	tableName  TableName
@@ -84,7 +76,7 @@ func (c *dependentColumn) DependsOn() TableName {
 }
 
 func (c *dependentColumn) Value(ctx context.Context) string {
-	parent := ctx.Value(parentKey).(map[ColumnName]string)
+	parent := ctx.Value(parentKey).(mappedValues)
 	return parent[c.columnName]
 }
 
@@ -95,83 +87,69 @@ func Reference(tableName TableName, columnName ColumnName) ColumnGenerator {
 	}
 }
 
-func Generate(w io.Writer, schema Schema) error {
-	gofakeit.Seed(0)
+type Insert interface {
+	Insert(table TableName, dist distribution.Distribution, next ...func(Insert))
+}
 
-	graph := make(map[TableName]map[TableName]struct{})
-	distributions := make(map[TableName]distribution.Distribution)
+type insertStack struct {
+	w      io.Writer
+	schema Schema
+	stack  map[TableName]mappedValues
+}
 
-	for tableName, columns := range schema {
-		graph[tableName] = make(map[TableName]struct{})
-		for _, generator := range columns {
+func merge(a map[TableName]mappedValues, b map[TableName]mappedValues) map[TableName]mappedValues {
+	copied := make(map[TableName]mappedValues, len(a)+len(b))
+	for k, v := range a {
+		copied[k] = v
+	}
+	for k, v := range b {
+		copied[k] = v
+	}
+	return copied
+}
+
+func (i *insertStack) Insert(table TableName, dist distribution.Distribution, next ...func(Insert)) {
+	generators := i.schema[table]
+
+	for dist() {
+		row := make(mappedValues, len(generators))
+
+		for column, generator := range generators {
+			ctx := context.Background()
+
 			if d, ok := generator.(Dependent); ok {
 				parent := d.DependsOn()
-				graph[tableName][parent] = struct{}{}
+
+				ctx = context.WithValue(ctx, parentKey, i.stack[parent])
 			}
-			if d, ok := generator.(Distributed); ok {
-				dist := d.Distribution()
-				distributions[tableName] = dist
-			}
+
+			row[column] = generator.Value(ctx)
 		}
-	}
 
-	fmt.Println(graph)
-
-	order := make([][]TableName, 0)
-
-	for len(graph) > 0 {
-		var current []TableName
-		for table, dependents := range graph {
-			if len(dependents) == 0 {
-				current = append(current, table)
-				delete(graph, table)
-			}
-		}
-		for _, dependents := range graph {
-			for _, scheduled := range current {
-				delete(dependents, scheduled)
-			}
-		}
-		order = append(order, current)
-	}
-
-	for _, stage := range order {
-		fmt.Println(stage)
-	}
-
-	rows := make(map[TableName]map[ColumnName]string)
-
-	for _, stage := range order {
-		for _, table := range stage {
-			generators := schema[table]
-
-			row := make(map[ColumnName]string, len(generators))
-
-			rows[table] = row
-
-			for column, generator := range generators {
-				ctx := context.Background()
-
-				if d, ok := generator.(Dependent); ok {
-					parent := d.DependsOn()
-
-					ctx = context.WithValue(ctx, parentKey, rows[parent])
-				}
-
-				row[column] = generator.Value(ctx)
-			}
-
-		}
-	}
-
-	for table, _ := range schema {
-		_, err := insert(w, table, rows[table])
+		_, err := insert(i.w, table, row)
 		if err != nil {
-			return err
+			panic(err)
+		}
+
+		for _, fn := range next {
+			fn(&insertStack{
+				w:      i.w,
+				schema: i.schema,
+				stack:  merge(i.stack, map[TableName]mappedValues{table: row}),
+			})
 		}
 	}
+}
 
-	return nil
+func Generate(w io.Writer, schema Schema) Insert {
+	gofakeit.Seed(0)
+	rand.Seed(0)
+
+	return &insertStack{
+		w:      w,
+		schema: schema,
+		stack:  make(map[TableName]mappedValues, 0),
+	}
 }
 
 func insert(w io.Writer, table TableName, row map[ColumnName]string) (int, error) {
