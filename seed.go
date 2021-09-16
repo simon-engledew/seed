@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/brianvoe/gofakeit/v6"
+	"github.com/simon-engledew/seed/distribution"
 	"io"
 	"strconv"
 	"strings"
@@ -15,6 +16,10 @@ type ColumnGenerator interface {
 
 type Dependent interface {
 	DependsOn() TableName
+}
+
+type Distributed interface {
+	Distribution() distribution.Distribution
 }
 
 type TableName string
@@ -43,6 +48,26 @@ func (c *callableColumn) Value(ctx context.Context) string {
 
 func newCallableColumn(value func() string) ColumnGenerator {
 	return &callableColumn{value: value}
+}
+
+type primaryColumn struct {
+	count        uint64
+	distribution distribution.Distribution
+}
+
+func (c *primaryColumn) Value(ctx context.Context) string {
+	c.count += 1
+	return strconv.FormatUint(c.count, 10)
+}
+
+func PrimaryKey(dist distribution.Distribution) ColumnGenerator {
+	return &primaryColumn{
+		distribution: dist,
+	}
+}
+
+func (c *primaryColumn) Distribution() distribution.Distribution {
+	return c.distribution
 }
 
 type contextKey string
@@ -74,6 +99,7 @@ func Generate(w io.Writer, schema Schema) error {
 	gofakeit.Seed(0)
 
 	graph := make(map[TableName]map[TableName]struct{})
+	distributions := make(map[TableName]distribution.Distribution)
 
 	for tableName, columns := range schema {
 		graph[tableName] = make(map[TableName]struct{})
@@ -81,6 +107,10 @@ func Generate(w io.Writer, schema Schema) error {
 			if d, ok := generator.(Dependent); ok {
 				parent := d.DependsOn()
 				graph[tableName][parent] = struct{}{}
+			}
+			if d, ok := generator.(Distributed); ok {
+				dist := d.Distribution()
+				distributions[tableName] = dist
 			}
 		}
 	}
@@ -154,15 +184,6 @@ func insert(w io.Writer, table TableName, row map[ColumnName]string) (int, error
 	}
 
 	return fmt.Fprintf(w, "INSERT INTO %s (%s) VALUES (%s);\n", table, strings.Join(columns, ","), strings.Join(values, ","))
-}
-
-func PrimaryKey() ColumnGenerator {
-	var id uint64
-
-	return newCallableColumn(func() string {
-		id += 1
-		return strconv.FormatUint(id, 10)
-	})
 }
 
 var DateTime = newStaticColumn("NOW()")
