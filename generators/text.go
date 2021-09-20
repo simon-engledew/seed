@@ -6,9 +6,7 @@ import (
 )
 
 func Format(fmt string) ValueGenerator {
-	return &funcGenerator{
-		value: func() string {
-			return quote.Quote(gofakeit.Generate(fmt))
-		},
-	}
+	return Faker(func(f *gofakeit.Faker) string {
+		return quote.Quote(f.Generate(fmt))
+	})
 }

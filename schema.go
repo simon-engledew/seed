@@ -1,10 +1,13 @@
 package seed
 
-import "context"
+import (
+	"context"
+	"sync"
+)
 
 type Schema map[string][]*Column
 
-func (s Schema) Generator(cb func(table string, columns []string, rows chan []string)) Generator {
+func (s Schema) Generator(ctx context.Context, cb func(table string, columns []string, rows chan []string)) Generator {
 	channels := make(map[string]chan []string)
 	for t, columns := range s {
 		channel := make(chan []string)
@@ -19,7 +22,8 @@ func (s Schema) Generator(cb func(table string, columns []string, rows chan []st
 		cb(t, names, channel)
 	}
 	return &insertStack{
-		ctx:      context.Background(),
+		wg:       &sync.WaitGroup{},
+		ctx:      ctx,
 		cb:       cb,
 		channels: channels,
 		schema:   s,

@@ -1,8 +1,8 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/brianvoe/gofakeit/v6"
 	"github.com/simon-engledew/seed"
 	"github.com/simon-engledew/seed/distribution"
 	"github.com/simon-engledew/seed/generators"
@@ -10,7 +10,12 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 )
+
+type key string
+
+var repoKey key = "repoID"
 
 func panicOnErr(fn func() error) {
 	if err := fn(); err != nil {
@@ -43,15 +48,13 @@ func main() {
 		panic(err)
 	}
 
-	repositoryID := 0
-
-	repoID := generators.Func(func() string {
-		return strconv.Itoa(repositoryID)
-	})
+	repositoryID := uint64(0)
 
 	schema.Transform(ReplaceColumns(map[string]generators.ValueGenerator{
-		"repository_id":    repoID,
-		"user_id":          generators.Identity(gofakeit.Generate("{number:1,256}")),
+		"repository_id": generators.Func(func(ctx context.Context) string {
+			return strconv.FormatUint(ctx.Value(repoKey).(uint64), 10)
+		}),
+		"user_id":          generators.Format("{number:1,256}"),
 		"version":          generators.Format("#.#.#"),
 		"semantic_version": generators.Format("#.#.#"),
 		"guid":             generators.Format("{uuid}"),
@@ -60,41 +63,58 @@ func main() {
 
 	os.MkdirAll("out", 0o755)
 
-	generator := schema.Generator(func(t string, c []string, rows chan []string) {
+	ctx := context.Background()
+
+	var wg sync.WaitGroup
+
+	generator := schema.Generator(ctx, func(t string, c []string, rows chan []string) {
+		wg.Add(1)
 		go func() {
+			counter := 0
+
 			f, err := os.Create(filepath.Join("out", t+".sql"))
 			if err != nil {
 				panic(err)
 			}
 			defer panicOnErr(f.Close)
+			defer wg.Done()
+
 			row := <-rows
-			fmt.Fprintf(f, "INSERT INTO %s (%s) VALUES (%s)", t, strings.Join(c, ", "), strings.Join(row, ", "))
-			for row := range rows {
-				fmt.Fprintf(f, ", (%s)", strings.Join(row, ", "))
+			if len(row) > 0 {
+				fmt.Fprintf(f, "INSERT INTO %s (%s) VALUES (%s)", t, strings.Join(c, ", "), strings.Join(row, ", "))
+				counter += 1
+
+				for row := range rows {
+					fmt.Fprintf(f, ", (%s)", strings.Join(row, ", "))
+
+					counter += 1
+				}
+				fmt.Fprintf(f, ";")
+
+				fmt.Printf("%s x %d\n", t, counter)
 			}
-			fmt.Fprintf(f, ";")
 		}()
 	})
 
-	for ; repositoryID < 1000; repositoryID += 1 {
+	for ; repositoryID < 10; repositoryID += 1 {
 		once := distribution.Fixed(1)
 
-		generator.Insert("ts_tools", distribution.Random(1, 3), func(g seed.Generator) {
+		ctx := context.WithValue(ctx, repoKey, repositoryID)
+
+		generator.InsertContext(ctx, "ts_tools", distribution.Random(1, 3), func(g seed.Generator) {
 			g.Insert("ts_tool_versions", distribution.Fixed(3), func(g seed.Generator) {
 				g.Insert("ts_analyses", once, func(g seed.Generator) {
-					fmt.Println("ts_analyses x 1")
+
 					g.Insert("ts_logical_alerts_seq", distribution.Fixed(1))
-					//fmt.Println("ts_rules x 100")
 
 					g.Insert("ts_rules", distribution.Fixed(100), func(g seed.Generator) {
 						g.Insert("ts_rule_tags", distribution.Ratio(0.8))
 
 						g.Insert("ts_analysis_rules", distribution.Fixed(1))
 						g.Insert("ts_snippets", distribution.Fixed(1), func(g seed.Generator) {
-							//fmt.Println("ts_logical_alerts x 1000")
 
-							g.Insert("ts_logical_alerts", distribution.Fixed(1000), func(g seed.Generator) {
-								g.Insert("ts_timeline_events", distribution.Random(0, 1))
+							g.Insert("ts_logical_alerts", distribution.Fixed(100), func(g seed.Generator) {
+								g.Insert("ts_timeline_events", distribution.Ratio(0.1))
 								g.Insert("ts_physical_alerts", distribution.Fixed(1))
 							})
 						})
@@ -103,4 +123,7 @@ func main() {
 			})
 		})
 	}
+
+	generator.Done()
+	wg.Wait()
 }

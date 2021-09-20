@@ -14,7 +14,6 @@ import (
 	"github.com/simon-engledew/seed/quote"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"strings"
 )
 
@@ -25,7 +24,7 @@ type Column struct {
 	Generator generators.ValueGenerator
 }
 
-func generator(f *gofakeit.Faker, ft *types.FieldType, isPrimary bool) generators.ValueGenerator {
+func generator(ft *types.FieldType, isPrimary bool) generators.ValueGenerator {
 	if isPrimary {
 		return generators.Counter()
 	}
@@ -38,19 +37,19 @@ func generator(f *gofakeit.Faker, ft *types.FieldType, isPrimary bool) generator
 	case "tinyint":
 		return generators.Format("{number:0,1}")
 	case "int":
-		return generators.Func(func() string {
+		return generators.Faker(func(f *gofakeit.Faker) string {
 			return f.DigitN(uint(f.Number(0, length)))
 		})
 	case "datetime":
-		return generators.Func(func() string {
+		return generators.Faker(func(f *gofakeit.Faker) string {
 			return quote.Quote(f.Date().Format("2006-01-02 15:04:05"))
 		})
 	case "bigint":
-		return generators.Func(func() string {
+		return generators.Faker(func(f *gofakeit.Faker) string {
 			return f.DigitN(uint(f.Number(0, length)))
 		})
 	case "varchar":
-		return generators.Func(func() string {
+		return generators.Faker(func(f *gofakeit.Faker) string {
 			n := uint(f.Number(0, length))
 
 			return quote.Quote(f.LetterN(n))
@@ -58,7 +57,7 @@ func generator(f *gofakeit.Faker, ft *types.FieldType, isPrimary bool) generator
 	case "json":
 		return generators.Identity(quote.Quote("{}"))
 	case "text":
-		return generators.Func(func() string {
+		return generators.Faker(func(f *gofakeit.Faker) string {
 			return quote.Quote(f.HackerPhrase())
 		})
 	}
@@ -85,8 +84,6 @@ func Load(r io.Reader) (Schema, error) {
 
 	for _, statement := range statements {
 		if create, ok := statement.(*ast.CreateTableStmt); ok {
-			f := &gofakeit.Faker{Rand: rand.New(rand.NewSource(0))}
-
 			table := make([]*Column, 0, len(create.Cols))
 
 			tableName := create.Table.Name.String()
@@ -118,7 +115,7 @@ func Load(r io.Reader) (Schema, error) {
 
 				table = append(table, &Column{
 					Name:      columnName,
-					Generator: generator(f, col.Tp, isPrimary),
+					Generator: generator(col.Tp, isPrimary),
 				})
 			}
 
