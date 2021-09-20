@@ -9,3 +9,9 @@ type funcGenerator struct {
 func (c *funcGenerator) Value(ctx context.Context) string {
 	return c.value()
 }
+
+func Func(fn func() string) ValueGenerator {
+	return &funcGenerator{
+		value: fn,
+	}
+}

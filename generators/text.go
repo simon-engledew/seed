@@ -5,17 +5,7 @@ import (
 	"github.com/simon-engledew/seed/quote"
 )
 
-func Text(size int) ValueGenerator {
-	return &funcGenerator{
-		value: func() string {
-			n := uint(gofakeit.Number(0, size))
-
-			return quote.Quote(gofakeit.LetterN(n))
-		},
-	}
-}
-
-func TextFormat(fmt string) ValueGenerator {
+func Format(fmt string) ValueGenerator {
 	return &funcGenerator{
 		value: func() string {
 			return quote.Quote(gofakeit.Generate(fmt))

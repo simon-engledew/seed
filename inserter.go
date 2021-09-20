@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/simon-engledew/seed/distribution"
 	"io"
+	"os"
 	"strings"
 )
 
@@ -46,7 +47,10 @@ func insert(w io.Writer, table TableName, row Row) (int, error) {
 func (i *insertStack) Insert(table TableName, dist distribution.Distribution, next ...func(Generator)) {
 	generators := i.schema[table]
 
+	count := 0
+
 	for dist() {
+		count += 1
 		row := make(Row, len(generators))
 
 		for column, generator := range generators {
@@ -58,6 +62,8 @@ func (i *insertStack) Insert(table TableName, dist distribution.Distribution, ne
 
 			row[column] = generator.Value(ctx)
 		}
+
+		fmt.Fprintf(os.Stderr, "%s x %d\n", table, count)
 
 		_, err := insert(i.w, table, row)
 		if err != nil {

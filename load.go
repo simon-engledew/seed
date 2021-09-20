@@ -2,12 +2,16 @@ package seed
 
 import (
 	"fmt"
+	"github.com/brianvoe/gofakeit/v6"
 	"github.com/jinzhu/inflection"
 	"github.com/jpillora/longestcommon"
 	"github.com/pingcap/parser"
 	"github.com/pingcap/parser/ast"
+	"github.com/pingcap/parser/mysql"
+	"github.com/pingcap/parser/types"
 	_ "github.com/pingcap/tidb/types/parser_driver"
 	"github.com/simon-engledew/seed/generators"
+	"github.com/simon-engledew/seed/quote"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -17,6 +21,47 @@ type TableName string
 type ColumnName string
 type Row map[ColumnName]string
 type Rows map[TableName]Row
+
+func generator(ft *types.FieldType, isPrimary bool) generators.ValueGenerator {
+	if isPrimary {
+		return generators.Counter()
+	}
+
+	name := types.TypeToStr(ft.Tp, ft.Charset)
+	_ = mysql.HasUnsignedFlag(ft.Flag)
+	length, _ := mysql.GetDefaultFieldLengthAndDecimal(ft.Tp)
+
+	switch name {
+	case "tinyint":
+		return generators.Format("{number:0,1}")
+	case "int":
+		return generators.Func(func() string {
+			return gofakeit.DigitN(uint(gofakeit.Number(0, length)))
+		})
+	case "datetime":
+		return generators.Func(func() string {
+			return quote.Quote(gofakeit.Date().Format("2006-01-02 15:04:05"))
+		})
+	case "bigint":
+		return generators.Func(func() string {
+			return gofakeit.DigitN(uint(gofakeit.Number(0, length)))
+		})
+	case "varchar":
+		return generators.Func(func() string {
+			n := uint(gofakeit.Number(0, length))
+
+			return quote.Quote(gofakeit.LetterN(n))
+		})
+	case "json":
+		return generators.Identity(quote.Quote("{}"))
+	case "text":
+		return generators.Func(func() string {
+			return quote.Quote(gofakeit.HackerPhrase())
+		})
+	}
+
+	return generators.Identity(quote.Quote(ft.InfoSchemaStr()))
+}
 
 func Load(r io.Reader) (Schema, error) {
 	p := parser.New()
@@ -68,7 +113,7 @@ func Load(r io.Reader) (Schema, error) {
 
 				_, isPrimary := primaryKey[columnName]
 
-				table[columnName] = generators.Get(col.Tp, isPrimary)
+				table[columnName] = generator(col.Tp, isPrimary)
 			}
 		}
 	}
