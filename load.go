@@ -14,15 +14,18 @@ import (
 	"github.com/simon-engledew/seed/quote"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"strings"
 )
 
-type TableName string
-type ColumnName string
-type Row map[ColumnName]string
-type Rows map[TableName]Row
+type Row []string
+type Rows map[string]Row
+type Column struct {
+	Name      string
+	Generator generators.ValueGenerator
+}
 
-func generator(ft *types.FieldType, isPrimary bool) generators.ValueGenerator {
+func generator(f *gofakeit.Faker, ft *types.FieldType, isPrimary bool) generators.ValueGenerator {
 	if isPrimary {
 		return generators.Counter()
 	}
@@ -36,27 +39,27 @@ func generator(ft *types.FieldType, isPrimary bool) generators.ValueGenerator {
 		return generators.Format("{number:0,1}")
 	case "int":
 		return generators.Func(func() string {
-			return gofakeit.DigitN(uint(gofakeit.Number(0, length)))
+			return f.DigitN(uint(f.Number(0, length)))
 		})
 	case "datetime":
 		return generators.Func(func() string {
-			return quote.Quote(gofakeit.Date().Format("2006-01-02 15:04:05"))
+			return quote.Quote(f.Date().Format("2006-01-02 15:04:05"))
 		})
 	case "bigint":
 		return generators.Func(func() string {
-			return gofakeit.DigitN(uint(gofakeit.Number(0, length)))
+			return f.DigitN(uint(f.Number(0, length)))
 		})
 	case "varchar":
 		return generators.Func(func() string {
-			n := uint(gofakeit.Number(0, length))
+			n := uint(f.Number(0, length))
 
-			return quote.Quote(gofakeit.LetterN(n))
+			return quote.Quote(f.LetterN(n))
 		})
 	case "json":
 		return generators.Identity(quote.Quote("{}"))
 	case "text":
 		return generators.Func(func() string {
-			return quote.Quote(gofakeit.HackerPhrase())
+			return quote.Quote(f.HackerPhrase())
 		})
 	}
 
@@ -76,26 +79,26 @@ func Load(r io.Reader) (Schema, error) {
 		return nil, fmt.Errorf("failed to parse sqldump: %w", err)
 	}
 
-	schema := make(map[TableName]map[ColumnName]generators.ValueGenerator)
+	schema := make(map[string][]*Column)
 
 	var tableNames []string
 
 	for _, statement := range statements {
 		if create, ok := statement.(*ast.CreateTableStmt); ok {
-			table := make(map[ColumnName]generators.ValueGenerator)
+			f := &gofakeit.Faker{Rand: rand.New(rand.NewSource(0))}
+
+			table := make([]*Column, 0, len(create.Cols))
 
 			tableName := create.Table.Name.String()
 
-			schema[TableName(tableName)] = table
-
 			tableNames = append(tableNames, tableName)
 
-			primaryKey := make(map[ColumnName]struct{})
+			primaryKey := make(map[string]struct{})
 
 			for _, constraint := range create.Constraints {
 				if constraint.Tp == ast.ConstraintPrimaryKey {
 					for _, key := range constraint.Keys {
-						columnName := ColumnName(key.Column.String())
+						columnName := key.Column.String()
 
 						primaryKey[columnName] = struct{}{}
 					}
@@ -103,7 +106,7 @@ func Load(r io.Reader) (Schema, error) {
 			}
 
 			for _, col := range create.Cols {
-				columnName := ColumnName(col.Name.String())
+				columnName := col.Name.String()
 
 				for _, option := range col.Options {
 					if option.Tp == ast.ColumnOptionPrimaryKey {
@@ -113,20 +116,29 @@ func Load(r io.Reader) (Schema, error) {
 
 				_, isPrimary := primaryKey[columnName]
 
-				table[columnName] = generator(col.Tp, isPrimary)
+				table = append(table, &Column{
+					Name:      columnName,
+					Generator: generator(f, col.Tp, isPrimary),
+				})
 			}
+
+			schema[tableName] = table
 		}
 	}
 
 	prefix := longestcommon.Prefix(tableNames)
 
 	for _, columns := range schema {
-		for columnName := range columns {
-			column := string(columnName)
-			if strings.HasSuffix(column, "_id") {
-				tableName := TableName(prefix + inflection.Plural(column[:len(columnName)-3]))
-				if _, ok := schema[tableName]; ok {
-					columns[columnName] = Reference(tableName, "id")
+		for i, column := range columns {
+			if strings.HasSuffix(column.Name, "_id") {
+				tableName := prefix + inflection.Plural(column.Name[:len(column.Name)-3])
+
+				if parent, ok := schema[tableName]; ok {
+					for j, target := range parent {
+						if target.Name == "id" {
+							columns[i].Generator = Reference(tableName, j)
+						}
+					}
 				}
 			}
 		}

@@ -2,23 +2,23 @@ package seed
 
 import (
 	"context"
-	"fmt"
 	"github.com/simon-engledew/seed/distribution"
 	"io"
-	"os"
-	"strings"
 )
 
 type contextKey string
 
 type Generator interface {
-	Insert(table TableName, dist distribution.Distribution, next ...func(Generator))
+	Insert(table string, dist distribution.Distribution, next ...func(Generator))
 }
 
 type insertStack struct {
-	w      io.Writer
-	schema Schema
-	stack  Rows
+	ctx      context.Context
+	cb       func(table string, columns []string, rows chan []string)
+	channels map[string]chan []string
+	w        io.Writer
+	schema   Schema
+	stack    Rows
 }
 
 func merge(a Rows, b Rows) Rows {
@@ -32,49 +32,51 @@ func merge(a Rows, b Rows) Rows {
 	return copied
 }
 
-func insert(w io.Writer, table TableName, row Row) (int, error) {
-	columns := make([]string, 0, len(row))
-	values := make([]string, 0, len(row))
+//func insert(w io.Writer, table TableName, row Row) (int, error) {
+//	columns := make([]string, 0, len(row))
+//	values := make([]string, 0, len(row))
+//
+//	for column, value := range row {
+//		columns = append(columns, string(column))
+//		values = append(values, value)
+//	}
+//
+//	return fmt.Fprintf(w, "INSERT INTO %s (%s) VALUES (%s);\n", table, strings.Join(columns, ","), strings.Join(values, ","))
+//}
 
-	for column, value := range row {
-		columns = append(columns, string(column))
-		values = append(values, value)
-	}
+//func columns(t map[ColumnName]generators.ValueGenerator) []string {
+//	out := make([]string, 0, len(t))
+//	for c := range t {
+//		out = append(out, string(c))
+//	}
+//	return out
+//}
 
-	return fmt.Fprintf(w, "INSERT INTO %s (%s) VALUES (%s);\n", table, strings.Join(columns, ","), strings.Join(values, ","))
-}
+func (i *insertStack) Insert(table string, dist distribution.Distribution, next ...func(Generator)) {
+	columns := i.schema[table]
 
-func (i *insertStack) Insert(table TableName, dist distribution.Distribution, next ...func(Generator)) {
-	generators := i.schema[table]
+	channel := i.channels[table]
 
-	count := 0
+	ctx := context.WithValue(i.ctx, parentKey, i.stack)
 
 	for dist() {
-		count += 1
-		row := make(Row, len(generators))
+		row := make(Row, 0, len(columns))
 
-		for column, generator := range generators {
-			ctx := context.Background()
-
-			if d, ok := generator.(References); ok {
-				ctx = d.WithParents(ctx, i.stack)
-			}
-
-			row[column] = generator.Value(ctx)
+		for _, column := range columns {
+			row = append(row, column.Generator.Value(ctx))
 		}
 
-		fmt.Fprintf(os.Stderr, "%s x %d\n", table, count)
+		channel <- row
 
-		_, err := insert(i.w, table, row)
-		if err != nil {
-			panic(err)
-		}
+		stack := merge(i.stack, Rows{table: row})
 
 		for _, fn := range next {
 			fn(&insertStack{
-				w:      i.w,
-				schema: i.schema,
-				stack:  merge(i.stack, Rows{table: row}),
+				ctx:      i.ctx,
+				channels: i.channels,
+				w:        i.w,
+				schema:   i.schema,
+				stack:    stack,
 			})
 		}
 	}
