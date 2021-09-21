@@ -1,3 +1,5 @@
 package consumers
 
-type Consumer func(t string, c []string, rows chan []string)
+import "sync"
+
+type Consumer func(*sync.WaitGroup) func(t string, c []string, rows chan []string)

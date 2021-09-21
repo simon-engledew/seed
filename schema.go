@@ -11,6 +11,10 @@ import (
 type Schema map[string][]*Column
 
 func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) Generator {
+	wg := &sync.WaitGroup{}
+
+	callback := consumer(wg)
+
 	channels := make(map[string]chan []string)
 	for t, columns := range s {
 		channel := make(chan []string)
@@ -22,12 +26,12 @@ func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) Gene
 			names = append(names, escape.QuoteIdentifier(column.Name))
 		}
 
-		consumer(t, names, channel)
+		callback(t, names, channel)
 	}
 	return &insertStack{
-		wg:       &sync.WaitGroup{},
+		wg:       wg,
 		ctx:      ctx,
-		consumer: consumer,
+		callback: callback,
 		channels: channels,
 		schema:   s,
 		stack:    make(Rows),

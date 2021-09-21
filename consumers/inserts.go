@@ -14,7 +14,7 @@ func panicOnErr(fn func() error) {
 	}
 }
 
-func Inserts(wg *sync.WaitGroup) Consumer {
+func Inserts(wg *sync.WaitGroup) func(t string, c []string, rows chan []string) {
 	return func(t string, c []string, rows chan []string) {
 		wg.Add(1)
 		go func() {
