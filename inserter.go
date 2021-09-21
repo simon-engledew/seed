@@ -36,26 +36,6 @@ func merge(a Rows, b Rows) Rows {
 	return copied
 }
 
-//func insert(w io.Writer, table TableName, row Row) (int, error) {
-//	columns := make([]string, 0, len(row))
-//	values := make([]string, 0, len(row))
-//
-//	for column, value := range row {
-//		columns = append(columns, string(column))
-//		values = append(values, value)
-//	}
-//
-//	return fmt.Fprintf(w, "INSERT INTO %s (%s) VALUES (%s);\n", table, strings.Join(columns, ","), strings.Join(values, ","))
-//}
-
-//func columns(t map[ColumnName]generators.ValueGenerator) []string {
-//	out := make([]string, 0, len(t))
-//	for c := range t {
-//		out = append(out, string(c))
-//	}
-//	return out
-//}
-
 func (i *insertStack) Done() {
 	i.wg.Wait()
 	for _, channel := range i.channels {

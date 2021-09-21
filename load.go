@@ -38,7 +38,6 @@ func generator(ft *types.FieldType, isPrimary bool) generators.ValueGenerator {
 	if length == types.UnspecifiedLength {
 		length, _ = mysql.GetDefaultFieldLengthAndDecimal(ft.Tp)
 	}
-	length = length - 2
 
 	switch name {
 	case "tinyint":
