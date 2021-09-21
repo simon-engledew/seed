@@ -11,9 +11,9 @@ import (
 type Schema map[string][]*Column
 
 func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) Generator {
-	wg := &sync.WaitGroup{}
+	consumers := &sync.WaitGroup{}
 
-	callback := consumer(wg)
+	callback := consumer(consumers)
 
 	channels := make(map[string]chan []string)
 	for t, columns := range s {
@@ -28,13 +28,15 @@ func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) Gene
 
 		callback(t, names, channel)
 	}
+
 	return &insertStack{
-		wg:       wg,
-		ctx:      ctx,
-		callback: callback,
-		channels: channels,
-		schema:   s,
-		stack:    make(Rows),
+		ctx:       ctx,
+		producers: &sync.WaitGroup{},
+		consumers: consumers,
+		callback:  callback,
+		channels:  channels,
+		schema:    s,
+		stack:     make(Rows),
 	}
 }
 
@@ -46,14 +48,6 @@ func (s Schema) Transform(transforms ...SchemaTransform) {
 			for _, transform := range transforms {
 				transform(t, c)
 			}
-		}
-	}
-}
-
-func (s Schema) Merge(other Schema) {
-	for t, columns := range other {
-		for c, g := range columns {
-			s[t][c] = g
 		}
 	}
 }

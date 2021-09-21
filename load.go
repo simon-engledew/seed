@@ -4,19 +4,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math"
-	"strconv"
 	"strings"
 
-	"github.com/brianvoe/gofakeit/v6"
 	"github.com/jinzhu/inflection"
 	"github.com/jpillora/longestcommon"
 	"github.com/pingcap/parser"
 	"github.com/pingcap/parser/ast"
-	"github.com/pingcap/parser/mysql"
-	"github.com/pingcap/parser/types"
 	_ "github.com/pingcap/tidb/types/parser_driver"
-	"github.com/simon-engledew/seed/escape"
 	"github.com/simon-engledew/seed/generators"
 )
 
@@ -25,53 +19,6 @@ type Rows map[string]Row
 type Column struct {
 	Name      string
 	Generator generators.ValueGenerator
-}
-
-func generator(ft *types.FieldType, isPrimary bool) generators.ValueGenerator {
-	if isPrimary {
-		return generators.Counter()
-	}
-
-	name := types.TypeToStr(ft.Tp, ft.Charset)
-	_ = mysql.HasUnsignedFlag(ft.Flag)
-	length := ft.Flen
-	if length == types.UnspecifiedLength {
-		length, _ = mysql.GetDefaultFieldLengthAndDecimal(ft.Tp)
-	}
-
-	switch name {
-	case "tinyint":
-		return generators.Format("{number:0,1}")
-	case "smallint", "int", "bigint":
-		return generators.Faker(func(f *gofakeit.Faker) string {
-			return f.DigitN(uint(f.Number(0, length)))
-		})
-	case "double":
-		return generators.Faker(func(f *gofakeit.Faker) string {
-			return strconv.FormatFloat(f.Float64Range(-100, 100), 'f', -1, 64)
-		})
-	case "datetime":
-		return generators.Faker(func(f *gofakeit.Faker) string {
-			return escape.Quote(f.Date().Format("2006-01-02 15:04:05"))
-		})
-	case "varchar", "varbinary":
-		return generators.Faker(func(f *gofakeit.Faker) string {
-			n := uint(math.Floor(math.Pow(f.Rand.Float64(), 4) * (1 + float64(length))))
-			return escape.Quote(f.LetterN(n))
-		})
-	case "binary":
-		return generators.Faker(func(f *gofakeit.Faker) string {
-			return escape.Quote(f.LetterN(uint(length)))
-		})
-	case "json":
-		return generators.Identity(escape.Quote("{}"))
-	case "mediumtext", "text":
-		return generators.Faker(func(f *gofakeit.Faker) string {
-			return escape.Quote(f.HackerPhrase())
-		})
-	}
-
-	return generators.Identity(escape.Quote(ft.InfoSchemaStr()))
 }
 
 func Load(r io.Reader) (Schema, error) {
@@ -124,7 +71,7 @@ func Load(r io.Reader) (Schema, error) {
 
 				table = append(table, &Column{
 					Name:      columnName,
-					Generator: generator(col.Tp, isPrimary),
+					Generator: generators.Column(col.Tp, isPrimary),
 				})
 			}
 

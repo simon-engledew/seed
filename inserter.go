@@ -16,13 +16,14 @@ type Generator interface {
 }
 
 type insertStack struct {
-	wg       *sync.WaitGroup
-	ctx      context.Context
-	callback func(table string, columns []string, rows chan []string)
-	channels map[string]chan []string
-	w        io.Writer
-	schema   Schema
-	stack    Rows
+	producers *sync.WaitGroup
+	consumers *sync.WaitGroup
+	ctx       context.Context
+	callback  func(table string, columns []string, rows chan []string)
+	channels  map[string]chan []string
+	w         io.Writer
+	schema    Schema
+	stack     Rows
 }
 
 func merge(a Rows, b Rows) Rows {
@@ -37,10 +38,11 @@ func merge(a Rows, b Rows) Rows {
 }
 
 func (i *insertStack) Done() {
-	i.wg.Wait()
+	i.producers.Wait()
 	for _, channel := range i.channels {
 		close(channel)
 	}
+	i.consumers.Wait()
 }
 
 func (i *insertStack) Insert(table string, dist distribution.Distribution, next ...func(Generator)) {
@@ -48,9 +50,9 @@ func (i *insertStack) Insert(table string, dist distribution.Distribution, next 
 }
 
 func (i *insertStack) InsertContext(ctx context.Context, table string, dist distribution.Distribution, next ...func(Generator)) {
-	i.wg.Add(1)
+	i.producers.Add(1)
 	go func() {
-		defer i.wg.Done()
+		defer i.producers.Done()
 
 		columns := i.schema[table]
 
@@ -71,12 +73,12 @@ func (i *insertStack) InsertContext(ctx context.Context, table string, dist dist
 
 			for _, fn := range next {
 				fn(&insertStack{
-					wg:       i.wg,
-					ctx:      ctx,
-					channels: i.channels,
-					w:        i.w,
-					schema:   i.schema,
-					stack:    stack,
+					producers: i.producers,
+					ctx:       ctx,
+					channels:  i.channels,
+					w:         i.w,
+					schema:    i.schema,
+					stack:     stack,
 				})
 			}
 		}
