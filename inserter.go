@@ -18,7 +18,7 @@ type Generator interface {
 type insertStack struct {
 	wg       *sync.WaitGroup
 	ctx      context.Context
-	cb       func(table string, columns []string, rows chan []string)
+	consumer func(table string, columns []string, rows chan []string)
 	channels map[string]chan []string
 	w        io.Writer
 	schema   Schema

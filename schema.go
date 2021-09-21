@@ -2,6 +2,7 @@ package seed
 
 import (
 	"context"
+	"github.com/simon-engledew/seed/consumers"
 	"sync"
 
 	"github.com/simon-engledew/seed/escape"
@@ -9,7 +10,7 @@ import (
 
 type Schema map[string][]*Column
 
-func (s Schema) Generator(ctx context.Context, cb func(table string, columns []string, rows chan []string)) Generator {
+func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) Generator {
 	channels := make(map[string]chan []string)
 	for t, columns := range s {
 		channel := make(chan []string)
@@ -21,12 +22,12 @@ func (s Schema) Generator(ctx context.Context, cb func(table string, columns []s
 			names = append(names, escape.QuoteIdentifier(column.Name))
 		}
 
-		cb(t, names, channel)
+		consumer(t, names, channel)
 	}
 	return &insertStack{
 		wg:       &sync.WaitGroup{},
 		ctx:      ctx,
-		cb:       cb,
+		consumer: consumer,
 		channels: channels,
 		schema:   s,
 		stack:    make(Rows),

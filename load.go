@@ -56,7 +56,7 @@ func generator(ft *types.FieldType, isPrimary bool) generators.ValueGenerator {
 		})
 	case "varchar", "varbinary":
 		return generators.Faker(func(f *gofakeit.Faker) string {
-			n := uint(math.Floor(1.0 - math.Sqrt(1-f.Float64())*float64(1+length)))
+			n := uint(math.Floor(math.Pow(f.Rand.Float64(), 4) * (1 + float64(length))))
 			return escape.Quote(f.LetterN(n))
 		})
 	case "binary":
