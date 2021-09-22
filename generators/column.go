@@ -15,7 +15,7 @@ func Column(ft *types.FieldType, isPrimary bool) ValueGenerator {
 	}
 
 	name := types.TypeToStr(ft.Tp, ft.Charset)
-	_ = mysql.HasUnsignedFlag(ft.Flag)
+	isUnsigned := mysql.HasUnsignedFlag(ft.Flag)
 	length := ft.Flen
 	if length == types.UnspecifiedLength {
 		length, _ = mysql.GetDefaultFieldLengthAndDecimal(ft.Tp)
@@ -23,11 +23,25 @@ func Column(ft *types.FieldType, isPrimary bool) ValueGenerator {
 
 	switch name {
 	case "tinyint":
-		return Format("{number:0,1}")
-	case "smallint", "int", "bigint":
-		return Faker(func(f *gofakeit.Faker) string {
-			return f.DigitN(uint(f.Number(0, length)))
-		})
+		if isUnsigned {
+			return Number(0, math.MaxUint8)
+		}
+		return Number(math.MinInt8, math.MaxInt8)
+	case "smallint":
+		if isUnsigned {
+			return Number(0, math.MaxUint16)
+		}
+		return Number(math.MinInt16, math.MaxInt16)
+	case "int":
+		if isUnsigned {
+			return Number(0, math.MaxUint32)
+		}
+		return Number(math.MinInt32, math.MaxInt32)
+	case "bigint":
+		if isUnsigned {
+			return Number(0, math.MaxUint64)
+		}
+		return Number(math.MinInt64, math.MaxInt64)
 	case "double":
 		return Faker(func(f *gofakeit.Faker) string {
 			return strconv.FormatFloat(f.Float64Range(-100, 100), 'f', -1, 64)

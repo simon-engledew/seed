@@ -3,6 +3,7 @@ package seed
 import (
 	"context"
 	"github.com/simon-engledew/seed/consumers"
+	"github.com/simon-engledew/seed/generators"
 	"sync"
 
 	"github.com/simon-engledew/seed/escape"
@@ -50,4 +51,15 @@ func (s Schema) Transform(transforms ...SchemaTransform) {
 			}
 		}
 	}
+}
+
+func (s Schema) Reference(t string, c string) generators.ValueGenerator {
+	columns := s[t]
+	for idx, column := range columns {
+		if column.Name == c {
+			return Reference(t, idx)
+		}
+	}
+
+	return nil
 }
