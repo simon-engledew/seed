@@ -24,24 +24,40 @@ func Column(ft *types.FieldType, isPrimary bool) ValueGenerator {
 	switch name {
 	case "tinyint":
 		if isUnsigned {
-			return Number(0, math.MaxUint8)
+			return Faker(func(f *gofakeit.Faker) string {
+				return strconv.FormatUint(uint64(f.Uint8()), 10)
+			})
 		}
-		return Number(math.MinInt8, math.MaxInt8)
+		return Faker(func(f *gofakeit.Faker) string {
+			return strconv.FormatInt(int64(f.Int8()), 10)
+		})
 	case "smallint":
 		if isUnsigned {
-			return Number(0, math.MaxUint16)
+			return Faker(func(f *gofakeit.Faker) string {
+				return strconv.FormatUint(uint64(f.Uint16()), 10)
+			})
 		}
-		return Number(math.MinInt16, math.MaxInt16)
+		return Faker(func(f *gofakeit.Faker) string {
+			return strconv.FormatInt(int64(f.Int16()), 10)
+		})
 	case "int":
 		if isUnsigned {
-			return Number(0, math.MaxUint32)
+			return Faker(func(f *gofakeit.Faker) string {
+				return strconv.FormatUint(uint64(f.Uint32()), 10)
+			})
 		}
-		return Number(math.MinInt32, math.MaxInt32)
+		return Faker(func(f *gofakeit.Faker) string {
+			return strconv.FormatInt(int64(f.Int32()), 10)
+		})
 	case "bigint":
 		if isUnsigned {
-			return Number(0, math.MaxUint64)
+			return Faker(func(f *gofakeit.Faker) string {
+				return strconv.FormatUint(f.Uint64(), 10)
+			})
 		}
-		return Number(math.MinInt64, math.MaxInt64)
+		return Faker(func(f *gofakeit.Faker) string {
+			return strconv.FormatInt(f.Int64(), 10)
+		})
 	case "double":
 		return Faker(func(f *gofakeit.Faker) string {
 			return strconv.FormatFloat(f.Float64Range(-100, 100), 'f', -1, 64)
