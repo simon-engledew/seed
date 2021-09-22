@@ -2,6 +2,7 @@ package seed
 
 import (
 	"context"
+	"fmt"
 	"github.com/simon-engledew/seed/generators"
 )
 
@@ -18,7 +19,11 @@ type dependentColumn struct {
 
 func (c *dependentColumn) Value(ctx context.Context) string {
 	parent := ctx.Value(parentKey).(Rows)
-	return parent[c.tableName][c.columnIndex]
+	row, ok := parent[c.tableName]
+	if !ok {
+		panic(fmt.Errorf("referenced table that has not been generated: %q", c.tableName))
+	}
+	return row[c.columnIndex]
 }
 
 func Reference(tableName string, columnIndex int) generators.ValueGenerator {
