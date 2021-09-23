@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/simon-engledew/seed/consumers"
 	"github.com/simon-engledew/seed/generators"
+	"golang.org/x/sync/errgroup"
 	"sync"
 
 	"github.com/simon-engledew/seed/escape"
@@ -12,7 +13,7 @@ import (
 type Schema map[string][]*Column
 
 func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) Generator {
-	consumers := &sync.WaitGroup{}
+	consumers, ctx := errgroup.WithContext(ctx)
 
 	callback := consumer(consumers)
 

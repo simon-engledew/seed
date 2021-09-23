@@ -1,53 +1,59 @@
 package consumers
 
 import (
+	"bytes"
 	"fmt"
-	"os"
-	"path/filepath"
+	"golang.org/x/sync/errgroup"
+	"io"
 	"strings"
 	"sync"
 )
 
-func panicOnErr(fn func() error) {
-	if err := fn(); err != nil {
-		panic(err)
-	}
-}
-
-func Inserts(dir string, batchSize int) Consumer {
-	return func(wg *sync.WaitGroup) func(t string, c []string, rows chan []string) {
+func Inserts(w io.Writer, batchSize int) Consumer {
+	var mutex sync.Mutex
+	return func(wg *errgroup.Group) func(t string, c []string, rows chan []string) {
 		return func(t string, c []string, rows chan []string) {
-			wg.Add(1)
-			go func() {
-				counter := 0
+			wg.Go(func() (err error) {
+				var buf bytes.Buffer
 
-				f, err := os.Create(filepath.Join(dir, t+".sql"))
+				_, err = fmt.Fprintf(&buf, "TRUNCATE %s;\n", t)
 				if err != nil {
-					panic(err)
+					return
 				}
-				defer panicOnErr(f.Close)
-				defer wg.Done()
 
-				fmt.Fprintf(f, "TRUNCATE %s;\n", t)
 				for row := <-rows; row != nil; row = <-rows {
-					fmt.Fprintf(f, "INSERT INTO %s (%s) VALUES (%s)", t, strings.Join(c, ", "), strings.Join(row, ", "))
-					counter += 1
+					_, err = fmt.Fprintf(&buf, "INSERT INTO %s (%s) VALUES (%s)", t, strings.Join(c, ", "), strings.Join(row, ", "))
+					if err != nil {
+						return
+					}
 
-					for i := 0; i < batchSize-1; i += 1 {
+					for i := 1; i < batchSize; i += 1 {
 						row = <-rows
 						if row == nil {
 							break
 						}
 
-						fmt.Fprintf(f, ",\n(%s)", strings.Join(row, ", "))
-
-						counter += 1
+						_, err = fmt.Fprintf(&buf, ",\n(%s)", strings.Join(row, ", "))
+						if err != nil {
+							return
+						}
 					}
-					fmt.Fprintf(f, ";\n")
+
+					_, err = fmt.Fprintf(&buf, ";\n")
+					if err != nil {
+						return
+					}
+
+					mutex.Lock()
+					_, err = io.Copy(w, &buf)
+					mutex.Unlock()
+					if err != nil {
+						return
+					}
 				}
 
-				fmt.Printf("%s x %d\n", t, counter)
-			}()
+				return
+			})
 		}
 	}
 }

@@ -1,5 +1,7 @@
 package consumers
 
-import "sync"
+import (
+	"golang.org/x/sync/errgroup"
+)
 
-type Consumer func(*sync.WaitGroup) func(t string, c []string, rows chan []string)
+type Consumer func(*errgroup.Group) func(t string, c []string, rows chan []string)

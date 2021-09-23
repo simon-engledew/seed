@@ -3,6 +3,7 @@ package seed
 import (
 	"context"
 	"github.com/simon-engledew/seed/distribution"
+	"golang.org/x/sync/errgroup"
 	"io"
 	"sync"
 )
@@ -12,12 +13,12 @@ type contextKey string
 type Generator interface {
 	InsertContext(ctx context.Context, table string, dist distribution.Distribution, next ...func(Generator))
 	Insert(table string, dist distribution.Distribution, next ...func(Generator))
-	Done()
+	Wait() error
 }
 
 type insertStack struct {
 	producers *sync.WaitGroup
-	consumers *sync.WaitGroup
+	consumers *errgroup.Group
 	ctx       context.Context
 	callback  func(table string, columns []string, rows chan []string)
 	channels  map[string]chan []string
@@ -37,12 +38,12 @@ func merge(a Rows, b Rows) Rows {
 	return copied
 }
 
-func (i *insertStack) Done() {
+func (i *insertStack) Wait() error {
 	i.producers.Wait()
 	for _, channel := range i.channels {
 		close(channel)
 	}
-	i.consumers.Wait()
+	return i.consumers.Wait()
 }
 
 func (i *insertStack) Insert(table string, dist distribution.Distribution, next ...func(Generator)) {
