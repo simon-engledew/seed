@@ -4,8 +4,12 @@ go 1.17
 
 require (
 	github.com/brianvoe/gofakeit/v6 v6.8.0
+	github.com/jinzhu/inflection v1.0.0
+	github.com/jpillora/longestcommon v0.0.0-20161227235612-adb9d91ee629
 	github.com/pingcap/parser v0.0.0-20210618053735-57843e8185c4
 	github.com/pingcap/tidb v1.1.0-beta.0.20210623150322-aaed43462d68
+	github.com/stretchr/testify v1.7.0
+	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 )
 
 require (
@@ -17,12 +21,11 @@ require (
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/danjacques/gofslock v0.0.0-20191023191349-0a45f885bc37 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.3.4 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0 // indirect
-	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jpillora/longestcommon v0.0.0-20161227235612-adb9d91ee629 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/opentracing/opentracing-go v1.1.0 // indirect
 	github.com/pingcap/errors v0.11.5-0.20201126102027-b0a155152ca3 // indirect
@@ -31,6 +34,7 @@ require (
 	github.com/pingcap/log v0.0.0-20210317133921-96f4fcab92a4 // indirect
 	github.com/pingcap/tipb v0.0.0-20210603161937-cfb5a9225f95 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.5.1 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.9.1 // indirect
@@ -46,10 +50,10 @@ require (
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.17.0 // indirect
 	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4 // indirect
-	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9 // indirect
 	golang.org/x/sys v0.0.0-20210324051608-47abb6519492 // indirect
 	golang.org/x/text v0.3.6 // indirect
 	google.golang.org/genproto v0.0.0-20200224152610-e50cd9704f63 // indirect
 	google.golang.org/grpc v1.27.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

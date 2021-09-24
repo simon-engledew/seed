@@ -16,7 +16,9 @@ func Inserts(w io.Writer, batchSize int) Consumer {
 			wg.Go(func() (err error) {
 				var buf bytes.Buffer
 
-				_, err = fmt.Fprintf(&buf, "TRUNCATE %s;\n", t)
+				mutex.Lock()
+				_, err = fmt.Fprintf(w, "TRUNCATE %s;\n", t)
+				mutex.Unlock()
 				if err != nil {
 					return
 				}

@@ -12,7 +12,7 @@ import (
 
 type Schema map[string][]*Column
 
-func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) Generator {
+func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) *Generator {
 	consumers, ctx := errgroup.WithContext(ctx)
 
 	callback := consumer(consumers)
@@ -31,7 +31,7 @@ func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) Gene
 		callback(t, names, channel)
 	}
 
-	return &insertStack{
+	return &Generator{
 		ctx:       ctx,
 		producers: &sync.WaitGroup{},
 		consumers: consumers,

@@ -36,9 +36,9 @@ func Ratio(ratio float64) Distribution {
 	})
 }
 
-func Range(min, max uint) Distribution {
-	count := uint(0)
-	size := uint(gofakeit.Number(int(min), int(max)))
+func Range(min, max int) Distribution {
+	count := 0
+	size := gofakeit.Number(min, max)
 	return Locked(func() bool {
 		count += 1
 		return count <= size
