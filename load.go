@@ -58,10 +58,14 @@ func Load(r io.Reader) (Schema, error) {
 				}
 			}
 
+		outer:
 			for _, col := range create.Cols {
 				columnName := col.Name.String()
 
 				for _, option := range col.Options {
+					if option.Tp == ast.ColumnOptionGenerated {
+						continue outer
+					}
 					if option.Tp == ast.ColumnOptionPrimaryKey {
 						primaryKey[columnName] = struct{}{}
 					}
