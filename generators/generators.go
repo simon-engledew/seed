@@ -36,7 +36,7 @@ var fakers = sync.Pool{
 }
 
 func Faker(fn func(*gofakeit.Faker) string) ColumnGenerator {
-	return Locked(func() string {
+	return Func(func(ctx context.Context) string {
 		f := fakers.Get().(*gofakeit.Faker)
 		defer fakers.Put(f)
 		return fn(f)
