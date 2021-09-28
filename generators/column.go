@@ -9,20 +9,6 @@ import (
 	"strconv"
 )
 
-func formatUint(fn func(*gofakeit.Faker) uint64) ColumnGenerator {
-	f := gofakeit.New(0)
-	return Locked(func() string {
-		return strconv.FormatUint(fn(f), 10)
-	})
-}
-
-func formatInt(fn func(*gofakeit.Faker) int64) ColumnGenerator {
-	f := gofakeit.New(0)
-	return Locked(func() string {
-		return strconv.FormatInt(fn(f), 10)
-	})
-}
-
 func Column(ft *types.FieldType, isPrimary bool) ColumnGenerator {
 	if isPrimary {
 		return Counter()
@@ -38,39 +24,39 @@ func Column(ft *types.FieldType, isPrimary bool) ColumnGenerator {
 	switch name {
 	case "tinyint":
 		if isUnsigned {
-			return formatUint(func(f *gofakeit.Faker) uint64 {
-				return uint64(f.Uint8())
+			return Faker(func(f *gofakeit.Faker) string {
+				return strconv.FormatUint(uint64(f.Uint8()), 10)
 			})
 		}
-		return formatInt(func(f *gofakeit.Faker) int64 {
-			return int64(f.Int8())
+		return Faker(func(f *gofakeit.Faker) string {
+			return strconv.FormatInt(int64(f.Int8()), 10)
 		})
 	case "smallint":
 		if isUnsigned {
-			return formatUint(func(f *gofakeit.Faker) uint64 {
-				return uint64(f.Uint16())
+			return Faker(func(f *gofakeit.Faker) string {
+				return strconv.FormatUint(uint64(f.Uint16()), 10)
 			})
 		}
-		return formatInt(func(f *gofakeit.Faker) int64 {
-			return int64(f.Int16())
+		return Faker(func(f *gofakeit.Faker) string {
+			return strconv.FormatInt(int64(f.Int16()), 10)
 		})
 	case "int":
 		if isUnsigned {
-			return formatUint(func(f *gofakeit.Faker) uint64 {
-				return uint64(f.Uint32())
+			return Faker(func(f *gofakeit.Faker) string {
+				return strconv.FormatUint(uint64(f.Uint32()), 10)
 			})
 		}
-		return formatInt(func(f *gofakeit.Faker) int64 {
-			return int64(f.Int32())
+		return Faker(func(f *gofakeit.Faker) string {
+			return strconv.FormatInt(int64(f.Int32()), 10)
 		})
 	case "bigint":
 		if isUnsigned {
-			return formatUint(func(f *gofakeit.Faker) uint64 {
-				return f.Uint64()
+			return Faker(func(f *gofakeit.Faker) string {
+				return strconv.FormatUint(f.Uint64(), 10)
 			})
 		}
-		return formatInt(func(f *gofakeit.Faker) int64 {
-			return f.Int64()
+		return Faker(func(f *gofakeit.Faker) string {
+			return strconv.FormatInt(f.Int64(), 10)
 		})
 	case "double":
 		return Faker(func(f *gofakeit.Faker) string {
