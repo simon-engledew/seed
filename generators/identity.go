@@ -16,7 +16,7 @@ func (c *identityGenerator) Value(ctx context.Context) string {
 	return c.value
 }
 
-func Identity(value string) ValueGenerator {
+func Identity(value string) ColumnGenerator {
 	return &identityGenerator{
 		value: value,
 	}

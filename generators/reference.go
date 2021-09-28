@@ -1,15 +1,18 @@
-package seed
+package generators
 
 import (
 	"context"
 	"fmt"
-	"github.com/simon-engledew/seed/generators"
+	"github.com/simon-engledew/seed/types"
 )
+
+type contextKey string
 
 var parentKey contextKey = "parent"
 
-type References interface {
-	WithParents(ctx context.Context, current string, rows Rows) context.Context
+// WithParents stores parent rows in the context for use in references.
+func WithParents(ctx context.Context, rows types.Rows) context.Context {
+	return context.WithValue(ctx, parentKey, rows)
 }
 
 type dependentColumn struct {
@@ -18,7 +21,7 @@ type dependentColumn struct {
 }
 
 func (c *dependentColumn) Value(ctx context.Context) string {
-	parent := ctx.Value(parentKey).(Rows)
+	parent := ctx.Value(parentKey).(types.Rows)
 	row, ok := parent[c.tableName]
 	if !ok {
 		panic(fmt.Errorf("referenced table that has not been generated: %q", c.tableName))
@@ -26,7 +29,7 @@ func (c *dependentColumn) Value(ctx context.Context) string {
 	return row[c.columnIndex]
 }
 
-func Reference(tableName string, columnIndex int) generators.ValueGenerator {
+func Reference(tableName string, columnIndex int) ColumnGenerator {
 	return &dependentColumn{
 		tableName:   tableName,
 		columnIndex: columnIndex,

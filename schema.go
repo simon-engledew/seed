@@ -4,15 +4,18 @@ import (
 	"context"
 	"github.com/simon-engledew/seed/consumers"
 	"github.com/simon-engledew/seed/generators"
+	"github.com/simon-engledew/seed/types"
 	"golang.org/x/sync/errgroup"
 	"sync"
 
 	"github.com/simon-engledew/seed/escape"
 )
 
+// Schema maps tables to columns.
 type Schema map[string][]*Column
 
-func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) *Generator {
+// Generator will emit test data to consumer.
+func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) *RowGenerator {
 	consumers, ctx := errgroup.WithContext(ctx)
 
 	callback := consumer(consumers)
@@ -31,19 +34,20 @@ func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) *Gen
 		callback(t, names, channel)
 	}
 
-	return &Generator{
+	return &RowGenerator{
 		ctx:       ctx,
 		producers: &sync.WaitGroup{},
 		consumers: consumers,
 		callback:  callback,
 		channels:  channels,
 		schema:    s,
-		stack:     make(Rows),
+		stack:     make(types.Rows),
 	}
 }
 
 type SchemaTransform func(t string, c *Column)
 
+// Transform iterates through the tables and columns in this schema, calling transforms on each.
 func (s Schema) Transform(transforms ...SchemaTransform) {
 	for t, columns := range s {
 		for _, c := range columns {
@@ -54,11 +58,12 @@ func (s Schema) Transform(transforms ...SchemaTransform) {
 	}
 }
 
-func (s Schema) Reference(t string, c string) generators.ValueGenerator {
+// Reference produces a ColumnGenerator which will emit the value of the parent row.
+func (s Schema) Reference(t string, c string) generators.ColumnGenerator {
 	columns := s[t]
 	for idx, column := range columns {
 		if column.Name == c {
-			return Reference(t, idx)
+			return generators.Reference(t, idx)
 		}
 	}
 

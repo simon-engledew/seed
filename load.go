@@ -14,13 +14,12 @@ import (
 	"github.com/simon-engledew/seed/generators"
 )
 
-type Row []string
-type Rows map[string]Row
 type Column struct {
 	Name      string
-	Generator generators.ValueGenerator
+	Generator generators.ColumnGenerator
 }
 
+// Load reads in MySQL schemas on stdin, returning a test data generator.
 func Load(r io.Reader) (Schema, error) {
 	p := parser.New()
 
@@ -93,7 +92,7 @@ func Load(r io.Reader) (Schema, error) {
 				if parent, ok := schema[tableName]; ok {
 					for j, target := range parent {
 						if target.Name == "id" {
-							columns[i].Generator = Reference(tableName, j)
+							columns[i].Generator = generators.Reference(tableName, j)
 						}
 					}
 				}

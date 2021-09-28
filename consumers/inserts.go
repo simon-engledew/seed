@@ -9,6 +9,7 @@ import (
 	"sync"
 )
 
+// Inserts creates a schema callback that will generate batches of insert statements and stream them to w.
 func Inserts(w io.Writer, batchSize int) Consumer {
 	var mutex sync.Mutex
 	return func(wg *errgroup.Group) func(t string, c []string, rows chan []string) {
