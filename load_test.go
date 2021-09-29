@@ -16,6 +16,7 @@ func TestLoad(t *testing.T) {
 	s.Transform(func(table string, c *seed.Column) {
 		require.Equal(t, "test", table)
 		require.Equal(t, "id", c.Name)
+		require.Equal(t, "bigint(20)", c.Type)
 	})
 	testConsumer := func(g *errgroup.Group) func(t string, c []string, rows chan []string) {
 		return func(table string, c []string, rows chan []string) {

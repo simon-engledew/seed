@@ -17,6 +17,7 @@ import (
 type Column struct {
 	Name      string
 	Generator generators.ColumnGenerator
+	Type      string
 }
 
 // Load reads in MySQL schemas on stdin, returning a test data generator.
@@ -75,6 +76,7 @@ func Load(r io.Reader) (Schema, error) {
 				table = append(table, &Column{
 					Name:      columnName,
 					Generator: generators.Column(col.Tp, isPrimary),
+					Type:      col.Tp.CompactStr(),
 				})
 			}
 
