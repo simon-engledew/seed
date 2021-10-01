@@ -8,11 +8,11 @@ import (
 	"sync"
 )
 
-type ColumnGenerator interface {
+type ValueGenerator interface {
 	Value(ctx context.Context) string
 }
 
-func Counter() ColumnGenerator {
+func Counter() ValueGenerator {
 	c := uint64(0)
 	return Locked(func() string {
 		c += 1
@@ -20,7 +20,7 @@ func Counter() ColumnGenerator {
 	})
 }
 
-func Locked(fn func() string) ColumnGenerator {
+func Locked(fn func() string) ValueGenerator {
 	var m sync.Mutex
 	return Func(func(ctx context.Context) string {
 		m.Lock()
@@ -35,7 +35,7 @@ var fakers = sync.Pool{
 	},
 }
 
-func Faker(fn func(*gofakeit.Faker) string) ColumnGenerator {
+func Faker(fn func(*gofakeit.Faker) string) ValueGenerator {
 	return Func(func(ctx context.Context) string {
 		f := fakers.Get().(*gofakeit.Faker)
 		defer fakers.Put(f)
@@ -43,7 +43,7 @@ func Faker(fn func(*gofakeit.Faker) string) ColumnGenerator {
 	})
 }
 
-func Format(fmt string) ColumnGenerator {
+func Format(fmt string) ValueGenerator {
 	return Faker(func(f *gofakeit.Faker) string {
 		return escape.Quote(f.Generate(fmt))
 	})

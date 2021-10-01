@@ -2,27 +2,28 @@ package seed
 
 import (
 	"context"
+	"fmt"
 	"github.com/simon-engledew/seed/distribution"
-	"github.com/simon-engledew/seed/generators"
-	"github.com/simon-engledew/seed/types"
 	"golang.org/x/sync/errgroup"
 	"io"
-	"sync"
 )
 
+type Row []string
+type Rows map[string]Row
+
 type RowGenerator struct {
-	producers *sync.WaitGroup
+	producers *errgroup.Group
 	consumers *errgroup.Group
 	ctx       context.Context
 	callback  func(table string, columns []string, rows chan []string)
 	channels  map[string]chan []string
 	w         io.Writer
 	schema    Schema
-	stack     types.Rows
+	stack     Rows
 }
 
-func merge(a types.Rows, b types.Rows) types.Rows {
-	copied := make(types.Rows, len(a)+len(b))
+func merge(a Rows, b Rows) Rows {
+	copied := make(Rows, len(a)+len(b))
 	for k, v := range a {
 		copied[k] = v
 	}
@@ -32,12 +33,22 @@ func merge(a types.Rows, b types.Rows) types.Rows {
 	return copied
 }
 
+func mergeErr(a, b error) error {
+	if a != nil {
+		if b != nil {
+			return fmt.Errorf("%s: %w", a, b)
+		}
+		return a
+	}
+	return b
+}
+
 func (g *RowGenerator) Wait() error {
-	g.producers.Wait()
+	err := g.producers.Wait()
 	for _, channel := range g.channels {
 		close(channel)
 	}
-	return g.consumers.Wait()
+	return mergeErr(g.consumers.Wait(), err)
 }
 
 func (g *RowGenerator) Insert(table string, dist distribution.Distribution, next ...func(*RowGenerator)) {
@@ -45,18 +56,18 @@ func (g *RowGenerator) Insert(table string, dist distribution.Distribution, next
 }
 
 func (g *RowGenerator) InsertContext(ctx context.Context, table string, dist distribution.Distribution, next ...func(*RowGenerator)) {
-	g.producers.Add(1)
-	go func() {
-		defer g.producers.Done()
-
-		columns := g.schema[table]
+	g.producers.Go(func() error {
+		columns, ok := g.schema[table]
+		if !ok {
+			return fmt.Errorf("unknown table %s", table)
+		}
 
 		channel := g.channels[table]
 
-		withStack := generators.WithParents(ctx, g.stack)
+		withStack := WithParents(ctx, g.stack)
 
 		for dist() {
-			row := make(types.Row, 0, len(columns))
+			row := make(Row, 0, len(columns))
 
 			for _, column := range columns {
 				row = append(row, column.Generator.Value(withStack))
@@ -64,7 +75,7 @@ func (g *RowGenerator) InsertContext(ctx context.Context, table string, dist dis
 
 			channel <- row
 
-			stack := merge(g.stack, types.Rows{table: row})
+			stack := merge(g.stack, Rows{table: row})
 
 			for _, fn := range next {
 				fn(&RowGenerator{
@@ -77,5 +88,7 @@ func (g *RowGenerator) InsertContext(ctx context.Context, table string, dist dis
 				})
 			}
 		}
-	}()
+
+		return nil
+	})
 }

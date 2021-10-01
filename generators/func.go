@@ -10,7 +10,7 @@ func (c *funcGenerator) Value(ctx context.Context) string {
 	return c.value(ctx)
 }
 
-func Func(fn func(ctx context.Context) string) ColumnGenerator {
+func Func(fn func(ctx context.Context) string) ValueGenerator {
 	return &funcGenerator{
 		value: fn,
 	}

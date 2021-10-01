@@ -4,59 +4,59 @@ import (
 	"bytes"
 	"fmt"
 	"golang.org/x/sync/errgroup"
-	"io"
 	"strings"
-	"sync"
 )
 
-// Inserts creates a schema callback that will generate batches of insert statements and stream them to w.
-func Inserts(w io.Writer, batchSize int) Consumer {
-	var mutex sync.Mutex
-	return func(wg *errgroup.Group) func(t string, c []string, rows chan []string) {
-		return func(t string, c []string, rows chan []string) {
-			wg.Go(func() (err error) {
-				var buf bytes.Buffer
+func Inserts(wg *errgroup.Group, fn func(stmt string) error, batchSize int) func(t string, c []string, rows chan []string) {
+	return func(t string, c []string, rows chan []string) {
+		wg.Go(func() (err error) {
+			var buf bytes.Buffer
 
-				mutex.Lock()
-				_, err = fmt.Fprintf(w, "TRUNCATE %s;\n", t)
-				mutex.Unlock()
+			w := &buf
+
+			err = fn(`SET autocommit = 0`)
+			if err != nil {
+				return
+			}
+
+			err = fn(`TRUNCATE ` + t)
+			if err != nil {
+				return
+			}
+
+			for row := <-rows; row != nil; row = <-rows {
+				_, err = fmt.Fprintf(w, "INSERT INTO %s (%s) VALUES (%s)", t, strings.Join(c, ", "), strings.Join(row, ", "))
 				if err != nil {
 					return
 				}
 
-				for row := <-rows; row != nil; row = <-rows {
-					_, err = fmt.Fprintf(&buf, "INSERT INTO %s (%s) VALUES (%s)", t, strings.Join(c, ", "), strings.Join(row, ", "))
-					if err != nil {
-						return
+				i := 1
+				for ; i < batchSize; i += 1 {
+					row = <-rows
+					if row == nil {
+						break
 					}
 
-					for i := 1; i < batchSize; i += 1 {
-						row = <-rows
-						if row == nil {
-							break
-						}
-
-						_, err = fmt.Fprintf(&buf, ",\n(%s)", strings.Join(row, ", "))
-						if err != nil {
-							return
-						}
-					}
-
-					_, err = fmt.Fprintf(&buf, ";\n")
-					if err != nil {
-						return
-					}
-
-					mutex.Lock()
-					_, err = io.Copy(w, &buf)
-					mutex.Unlock()
+					_, err = fmt.Fprintf(w, ",\n(%s)", strings.Join(row, ", "))
 					if err != nil {
 						return
 					}
 				}
 
-				return
-			})
-		}
+				_, err = fmt.Fprintf(w, ";\n")
+				if err != nil {
+					return
+				}
+
+				err = fn(buf.String())
+				if err != nil {
+					return
+				}
+
+				buf.Reset()
+			}
+
+			return fn(`COMMIT`)
+		})
 	}
 }
