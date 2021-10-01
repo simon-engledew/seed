@@ -24,7 +24,7 @@ func TestInsertsConsumerShort(t *testing.T) {
 		close(rows)
 	}()
 
-	fn := consumers.Inserts(&buf, 5)(group)
+	fn := consumers.InsertWriter(&buf, 5)(context.Background(), group)
 	fn("test", []string{"id", "name"}, rows)
 
 	require.NoError(t, group.Wait())
@@ -44,7 +44,7 @@ func TestInsertsConsumerLong(t *testing.T) {
 		close(rows)
 	}()
 
-	fn := consumers.Inserts(&buf, 1)(group)
+	fn := consumers.InsertWriter(&buf, 1)(context.Background(), group)
 	fn("test", []string{"id", "name"}, rows)
 
 	require.NoError(t, group.Wait())
@@ -59,7 +59,7 @@ func TestInsertsConsumerNone(t *testing.T) {
 
 	close(rows)
 
-	fn := consumers.Inserts(&buf, 1)(group)
+	fn := consumers.InsertWriter(&buf, 1)(context.Background(), group)
 	fn("test", []string{"id", "name"}, rows)
 
 	require.NoError(t, group.Wait())
@@ -79,7 +79,7 @@ func TestInsertsConsumerInterleaved(t *testing.T) {
 	cats <- []string{"1", "'paws'"}
 	cats <- []string{"2", "'sad tony'"}
 
-	fn := consumers.Inserts(&buf, 5)(group)
+	fn := consumers.InsertWriter(&buf, 5)(context.Background(), group)
 	fn("dogs", []string{"id", "name"}, dogs)
 	fn("cats", []string{"id", "name"}, cats)
 
