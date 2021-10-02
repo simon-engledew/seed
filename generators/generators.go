@@ -3,7 +3,6 @@ package generators
 import (
 	"context"
 	"github.com/brianvoe/gofakeit/v6"
-	"github.com/simon-engledew/seed/escape"
 	"strconv"
 	"sync"
 )
@@ -45,6 +44,6 @@ func Faker(fn func(*gofakeit.Faker) string) ValueGenerator {
 
 func Format(fmt string) ValueGenerator {
 	return Faker(func(f *gofakeit.Faker) string {
-		return escape.Quote(f.Generate(fmt))
+		return f.Generate(fmt)
 	})
 }

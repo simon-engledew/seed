@@ -19,7 +19,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	generator := schema.Generator(context.Background(), consumers.InsertWriter(os.Stdout, 100))
+	generator := schema.Generator(context.Background(), consumers.MySQLInsertWriter(os.Stdout, 100))
 	generator.Insert("owners", distribution.Range(100, 200), func(g *seed.RowGenerator) {
 		g.Insert("cats", distribution.Ratio(0.3))
 	})

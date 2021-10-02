@@ -8,28 +8,26 @@ import (
 )
 
 func Build(i inspectors.Inspector) (Schema, error) {
-	info, err := i()
+	schema := make(map[string][]*Column)
+
+	err := i(func(tableName, columnName string, columnInfo inspectors.ColumnInfo) {
+		if _, ok := schema[tableName]; !ok {
+			schema[tableName] = make([]*Column, 0)
+		}
+		schema[tableName] = append(schema[tableName], &Column{
+			Name:      columnName,
+			Generator: columnInfo.Generator(),
+			Type:      columnInfo.Type(),
+		})
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	schema := make(map[string][]*Column)
+	tableNames := make([]string, 0, len(schema))
 
-	tableNames := make([]string, 0, len(info))
-
-	for tableName, columns := range info {
-		table := make([]*Column, 0, len(columns))
+	for tableName := range schema {
 		tableNames = append(tableNames, tableName)
-
-		for columnName, column := range columns {
-			table = append(table, &Column{
-				Name:      columnName,
-				Generator: column.Generator(),
-				Type:      column.Type(),
-			})
-		}
-
-		schema[tableName] = table
 	}
 
 	prefix := longestcommon.Prefix(tableNames)

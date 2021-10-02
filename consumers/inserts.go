@@ -10,6 +10,8 @@ import (
 func Inserts(wg *errgroup.Group, fn func(stmt string) error, batchSize int) func(t string, c []string, rows chan []string) {
 	return func(t string, c []string, rows chan []string) {
 		wg.Go(func() (err error) {
+			cols := strings.Join(c, ", ")
+
 			var buf bytes.Buffer
 
 			w := &buf
@@ -25,7 +27,7 @@ func Inserts(wg *errgroup.Group, fn func(stmt string) error, batchSize int) func
 			}
 
 			for row := <-rows; row != nil; row = <-rows {
-				_, err = fmt.Fprintf(w, "INSERT INTO %s (%s) VALUES (%s)", t, strings.Join(c, ", "), strings.Join(row, ", "))
+				_, err = fmt.Fprintf(w, "INSERT INTO %s (%s) VALUES (%s)", t, cols, strings.Join(row, ", "))
 				if err != nil {
 					return
 				}

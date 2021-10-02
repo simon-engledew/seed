@@ -5,8 +5,6 @@ import (
 	"github.com/simon-engledew/seed/consumers"
 	"github.com/simon-engledew/seed/generators"
 	"golang.org/x/sync/errgroup"
-
-	"github.com/simon-engledew/seed/escape"
 )
 
 type Column struct {
@@ -33,7 +31,7 @@ func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) *Row
 		names := make([]string, 0, len(columns))
 
 		for _, column := range columns {
-			names = append(names, escape.QuoteIdentifier(column.Name))
+			names = append(names, column.Name)
 		}
 
 		callback(t, names, channel)
