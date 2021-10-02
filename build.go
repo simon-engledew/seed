@@ -21,11 +21,11 @@ func Build(i inspectors.Inspector) (Schema, error) {
 		table := make([]*Column, 0, len(columns))
 		tableNames = append(tableNames, tableName)
 
-		for _, column := range columns {
+		for columnName, column := range columns {
 			table = append(table, &Column{
-				Name:      column.Name,
-				Generator: FromColumnInfo(&column),
-				Type:      column.Type,
+				Name:      columnName,
+				Generator: column.Generator(),
+				Type:      column.Type(),
 			})
 		}
 

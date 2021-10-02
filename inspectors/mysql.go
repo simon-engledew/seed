@@ -4,22 +4,26 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/brianvoe/gofakeit/v6"
 	"github.com/pingcap/parser"
 	"github.com/pingcap/parser/ast"
 	"github.com/pingcap/parser/mysql"
 	"github.com/pingcap/parser/types"
 	_ "github.com/pingcap/tidb/types/parser_driver"
+	"github.com/simon-engledew/seed/escape"
+	"github.com/simon-engledew/seed/generators"
 	"io"
 	"io/ioutil"
+	"math"
+	"strconv"
 )
 
 const query = `
 SELECT JSON_OBJECTAGG(table_name, columns) FROM (
     SELECT 
         TABLE_NAME AS 'table_name',
-        JSON_ARRAYAGG(
+        JSON_OBJECTAGG(COLUMN_NAME,
 			JSON_OBJECT(
-				'name', COLUMN_NAME,
 				'data_type', DATA_TYPE,
 				'is_primary', COLUMN_KEY = 'PRI',
 				'is_unsigned', COLUMN_TYPE LIKE '% unsigned',
@@ -33,16 +37,98 @@ SELECT JSON_OBJECTAGG(table_name, columns) FROM (
 	GROUP BY TABLE_NAME
 ) AS pairs`
 
+type MySQLColumn struct {
+	DataType   string `json:"data_type"`
+	IsPrimary  bool   `json:"is_primary"`
+	IsUnsigned bool   `json:"is_unsigned"`
+	Length     int    `json:"length"`
+	ColumnType string `json:"column_type"`
+}
+
+func (c *MySQLColumn) Type() string {
+	return c.ColumnType
+}
+
+func (c *MySQLColumn) Generator() generators.ValueGenerator {
+	if c.IsPrimary {
+		return generators.Counter()
+	}
+
+	switch c.DataType {
+	case "tinyint":
+		if c.IsUnsigned {
+			return generators.Faker(func(f *gofakeit.Faker) string {
+				return strconv.FormatUint(uint64(f.Uint8()), 10)
+			})
+		}
+		return generators.Faker(func(f *gofakeit.Faker) string {
+			return strconv.FormatInt(int64(f.Int8()), 10)
+		})
+	case "smallint":
+		if c.IsUnsigned {
+			return generators.Faker(func(f *gofakeit.Faker) string {
+				return strconv.FormatUint(uint64(f.Uint16()), 10)
+			})
+		}
+		return generators.Faker(func(f *gofakeit.Faker) string {
+			return strconv.FormatInt(int64(f.Int16()), 10)
+		})
+	case "int":
+		if c.IsUnsigned {
+			return generators.Faker(func(f *gofakeit.Faker) string {
+				return strconv.FormatUint(uint64(f.Uint32()), 10)
+			})
+		}
+		return generators.Faker(func(f *gofakeit.Faker) string {
+			return strconv.FormatInt(int64(f.Int32()), 10)
+		})
+	case "bigint":
+		if c.IsUnsigned {
+			return generators.Faker(func(f *gofakeit.Faker) string {
+				return strconv.FormatUint(f.Uint64(), 10)
+			})
+		}
+		return generators.Faker(func(f *gofakeit.Faker) string {
+			return strconv.FormatInt(f.Int64(), 10)
+		})
+	case "double":
+		return generators.Faker(func(f *gofakeit.Faker) string {
+			return strconv.FormatFloat(f.Float64Range(-100, 100), 'f', -1, 64)
+		})
+	case "datetime":
+		return generators.Faker(func(f *gofakeit.Faker) string {
+			return escape.Quote(f.Date().Format("2006-01-02 15:04:05"))
+		})
+	case "varchar", "varbinary":
+		return generators.Faker(func(f *gofakeit.Faker) string {
+			n := uint(math.Floor(math.Pow(f.Rand.Float64(), 4) * (1 + float64(c.Length))))
+			return escape.Quote(f.LetterN(n))
+		})
+	case "binary":
+		return generators.Faker(func(f *gofakeit.Faker) string {
+			return escape.Quote(f.LetterN(uint(c.Length)))
+		})
+	case "json":
+		return generators.Identity(escape.Quote("{}"))
+	case "mediumtext", "text":
+		return generators.Faker(func(f *gofakeit.Faker) string {
+			return escape.Quote(f.HackerPhrase())
+		})
+	}
+
+	return generators.Identity(escape.Quote(c.ColumnType))
+}
+
 // InspectMySQLConnection will select information from information_schema based on the current database.
 func InspectMySQLConnection(db *sql.DB) Inspector {
-	return func() (map[string][]ColumnInfo, error) {
+	return func() (map[string]map[string]Column, error) {
 		var data json.RawMessage
 
 		if err := db.QueryRow(query).Scan(&data); err != nil {
 			return nil, err
 		}
 
-		var out map[string][]ColumnInfo
+		var out map[string]map[string]Column
 
 		if err := json.Unmarshal(data, &out); err != nil {
 			return nil, err
@@ -55,7 +141,7 @@ func InspectMySQLConnection(db *sql.DB) Inspector {
 func InspectMySQLSchema(r io.Reader) Inspector {
 	p := parser.New()
 
-	return func() (map[string][]ColumnInfo, error) {
+	return func() (map[string]map[string]Column, error) {
 		dump, err := ioutil.ReadAll(r)
 		if err != nil {
 			return nil, err
@@ -66,13 +152,13 @@ func InspectMySQLSchema(r io.Reader) Inspector {
 			return nil, fmt.Errorf("failed to parse sqldump: %w", err)
 		}
 
-		out := make(map[string][]ColumnInfo)
+		out := make(map[string]map[string]Column)
 
 		var tableNames []string
 
 		for _, statement := range statements {
 			if create, ok := statement.(*ast.CreateTableStmt); ok {
-				table := make([]ColumnInfo, 0, len(create.Cols))
+				table := make(map[string]Column)
 
 				tableName := create.Table.Name.String()
 
@@ -110,14 +196,13 @@ func InspectMySQLSchema(r io.Reader) Inspector {
 						length, _ = mysql.GetDefaultFieldLengthAndDecimal(col.Tp.Tp)
 					}
 
-					table = append(table, ColumnInfo{
-						Name:       columnName,
+					table[columnName] = &MySQLColumn{
 						IsPrimary:  isPrimary,
 						IsUnsigned: mysql.HasUnsignedFlag(col.Tp.Flag),
-						Type:       col.Tp.CompactStr(),
+						ColumnType: col.Tp.CompactStr(),
 						DataType:   types.TypeToStr(col.Tp.Tp, col.Tp.Charset),
 						Length:     length,
-					})
+					}
 				}
 
 				out[tableName] = table

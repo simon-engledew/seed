@@ -11,8 +11,8 @@ import (
 
 type Column struct {
 	Name      string
-	Generator generators.ValueGenerator
 	Type      string
+	Generator generators.ValueGenerator
 }
 
 // Schema maps tables to columns.
