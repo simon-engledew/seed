@@ -28,7 +28,7 @@ func TestInsertsConsumerShort(t *testing.T) {
 	fn("test", []string{"id", "name"}, rows)
 
 	require.NoError(t, group.Wait())
-	require.Equal(t, "TRUNCATE test;\nINSERT INTO test (id, name) VALUES (1, 'test-1'),\n(2, 'test-2');\n", buf.String())
+	require.Equal(t, "SET autocommit = 0;\nTRUNCATE test;\nINSERT INTO test (id, name) VALUES (1, 'test-1'),\n(2, 'test-2');\nCOMMIT;\n", buf.String())
 }
 
 func TestInsertsConsumerLong(t *testing.T) {
@@ -48,7 +48,7 @@ func TestInsertsConsumerLong(t *testing.T) {
 	fn("test", []string{"id", "name"}, rows)
 
 	require.NoError(t, group.Wait())
-	require.Equal(t, "TRUNCATE test;\nINSERT INTO test (id, name) VALUES (1, 'test-1');\nINSERT INTO test (id, name) VALUES (2, 'test-2');\n", buf.String())
+	require.Equal(t, "SET autocommit = 0;\nTRUNCATE test;\nINSERT INTO test (id, name) VALUES (1, 'test-1');\nINSERT INTO test (id, name) VALUES (2, 'test-2');\nCOMMIT;\n", buf.String())
 }
 
 func TestInsertsConsumerNone(t *testing.T) {
@@ -63,7 +63,7 @@ func TestInsertsConsumerNone(t *testing.T) {
 	fn("test", []string{"id", "name"}, rows)
 
 	require.NoError(t, group.Wait())
-	require.Equal(t, "TRUNCATE test;\n", buf.String())
+	require.Equal(t, "SET autocommit = 0;\nTRUNCATE test;\nCOMMIT;\n", buf.String())
 }
 
 func TestInsertsConsumerInterleaved(t *testing.T) {

@@ -20,7 +20,7 @@ type dependentColumn struct {
 	columnIndex int
 }
 
-func (c *dependentColumn) Value(ctx context.Context) string {
+func (c *dependentColumn) Value(ctx context.Context) *generators.Value {
 	parent := ctx.Value(parentKey).(Rows)
 	row, ok := parent[c.tableName]
 	if !ok {

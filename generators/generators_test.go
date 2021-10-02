@@ -8,5 +8,7 @@ import (
 )
 
 func TestText(t *testing.T) {
-	require.Equal(t, "'test-1'", generators.Format("test-{number:1,1}").Value(context.Background()))
+	v := generators.Format("test-{number:1,1}").Value(context.Background())
+	require.Equal(t, "test-1", v.Value)
+	require.True(t, v.Quote)
 }

@@ -4,19 +4,20 @@ import (
 	"context"
 	"fmt"
 	"github.com/simon-engledew/seed/distribution"
+	"github.com/simon-engledew/seed/generators"
 	"golang.org/x/sync/errgroup"
 	"io"
 )
 
-type Row []string
+type Row []*generators.Value
 type Rows map[string]Row
 
 type RowGenerator struct {
 	producers *errgroup.Group
 	consumers *errgroup.Group
 	ctx       context.Context
-	callback  func(table string, columns []string, rows chan []string)
-	channels  map[string]chan []string
+	callback  func(t string, c []string, rows chan []*generators.Value)
+	channels  map[string]chan []*generators.Value
 	w         io.Writer
 	schema    Schema
 	stack     Rows

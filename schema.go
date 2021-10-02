@@ -23,9 +23,9 @@ func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) *Row
 
 	callback := consumer(consumersCtx, consumers)
 
-	channels := make(map[string]chan []string)
+	channels := make(map[string]chan []*generators.Value)
 	for t, columns := range s {
-		channel := make(chan []string)
+		channel := make(chan []*generators.Value)
 		channels[t] = channel
 
 		names := make([]string, 0, len(columns))

@@ -2,22 +2,23 @@ package generators
 
 import (
 	"context"
+	"fmt"
 )
 
 type identityGenerator struct {
-	value string
+	value *Value
 }
 
 func (c *identityGenerator) String() string {
-	return "<" + c.value + ">"
+	return fmt.Sprintf("<%s>", c.value.Value)
 }
 
-func (c *identityGenerator) Value(ctx context.Context) string {
+func (c *identityGenerator) Value(ctx context.Context) *Value {
 	return c.value
 }
 
-func Identity(value string) ValueGenerator {
+func Identity(value string, quote bool) ValueGenerator {
 	return &identityGenerator{
-		value: value,
+		value: NewValue(value, quote),
 	}
 }

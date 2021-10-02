@@ -1,7 +1,6 @@
 package inspectors
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -59,66 +58,66 @@ func (c *MySQLColumn) Generator() generators.ValueGenerator {
 	switch c.DataType {
 	case "tinyint":
 		if c.IsUnsigned {
-			return generators.Faker(func(f *gofakeit.Faker) string {
-				return strconv.FormatUint(uint64(f.Uint8()), 10)
+			return generators.Faker(func(f *gofakeit.Faker) *generators.Value {
+				return generators.NewValue(strconv.FormatUint(uint64(f.Uint8()), 10), false)
 			})
 		}
-		return generators.Faker(func(f *gofakeit.Faker) string {
-			return strconv.FormatInt(int64(f.Int8()), 10)
+		return generators.Faker(func(f *gofakeit.Faker) *generators.Value {
+			return generators.NewValue(strconv.FormatInt(int64(f.Int8()), 10), false)
 		})
 	case "smallint":
 		if c.IsUnsigned {
-			return generators.Faker(func(f *gofakeit.Faker) string {
-				return strconv.FormatUint(uint64(f.Uint16()), 10)
+			return generators.Faker(func(f *gofakeit.Faker) *generators.Value {
+				return generators.NewValue(strconv.FormatUint(uint64(f.Uint16()), 10), false)
 			})
 		}
-		return generators.Faker(func(f *gofakeit.Faker) string {
-			return strconv.FormatInt(int64(f.Int16()), 10)
+		return generators.Faker(func(f *gofakeit.Faker) *generators.Value {
+			return generators.NewValue(strconv.FormatInt(int64(f.Int16()), 10), false)
 		})
 	case "int":
 		if c.IsUnsigned {
-			return generators.Faker(func(f *gofakeit.Faker) string {
-				return strconv.FormatUint(uint64(f.Uint32()), 10)
+			return generators.Faker(func(f *gofakeit.Faker) *generators.Value {
+				return generators.NewValue(strconv.FormatUint(uint64(f.Uint32()), 10), false)
 			})
 		}
-		return generators.Faker(func(f *gofakeit.Faker) string {
-			return strconv.FormatInt(int64(f.Int32()), 10)
+		return generators.Faker(func(f *gofakeit.Faker) *generators.Value {
+			return generators.NewValue(strconv.FormatInt(int64(f.Int32()), 10), false)
 		})
 	case "bigint":
 		if c.IsUnsigned {
-			return generators.Faker(func(f *gofakeit.Faker) string {
-				return strconv.FormatUint(f.Uint64(), 10)
+			return generators.Faker(func(f *gofakeit.Faker) *generators.Value {
+				return generators.NewValue(strconv.FormatUint(f.Uint64(), 10), false)
 			})
 		}
-		return generators.Faker(func(f *gofakeit.Faker) string {
-			return strconv.FormatInt(f.Int64(), 10)
+		return generators.Faker(func(f *gofakeit.Faker) *generators.Value {
+			return generators.NewValue(strconv.FormatInt(f.Int64(), 10), false)
 		})
 	case "double":
-		return generators.Faker(func(f *gofakeit.Faker) string {
-			return strconv.FormatFloat(f.Float64Range(-100, 100), 'f', -1, 64)
+		return generators.Faker(func(f *gofakeit.Faker) *generators.Value {
+			return generators.NewValue(strconv.FormatFloat(f.Float64Range(-100, 100), 'f', -1, 64), false)
 		})
 	case "datetime":
-		return generators.Faker(func(f *gofakeit.Faker) string {
-			return f.Date().Format("'2006-01-02 15:04:05'")
+		return generators.Faker(func(f *gofakeit.Faker) *generators.Value {
+			return generators.NewValue(f.Date().Format("'2006-01-02 15:04:05'"), false)
 		})
 	case "varchar", "varbinary":
-		return generators.Faker(func(f *gofakeit.Faker) string {
+		return generators.Faker(func(f *gofakeit.Faker) *generators.Value {
 			n := uint(math.Floor(math.Pow(f.Rand.Float64(), 4) * (1 + float64(c.Length))))
-			return Quote(f.LetterN(n))
+			return generators.NewValue(f.LetterN(n), true)
 		})
 	case "binary":
-		return generators.Faker(func(f *gofakeit.Faker) string {
-			return Quote(f.LetterN(uint(c.Length)))
+		return generators.Faker(func(f *gofakeit.Faker) *generators.Value {
+			return generators.NewValue(f.LetterN(uint(c.Length)), true)
 		})
 	case "json":
-		return generators.Identity("'{}'")
+		return generators.Identity("'{}'", false)
 	case "mediumtext", "text":
-		return generators.Faker(func(f *gofakeit.Faker) string {
-			return Quote(f.HackerPhrase())
+		return generators.Faker(func(f *gofakeit.Faker) *generators.Value {
+			return generators.NewValue(f.HackerPhrase(), true)
 		})
 	}
 
-	return generators.Identity(c.ColumnType)
+	return generators.Identity(c.ColumnType, true)
 }
 
 // InspectMySQLConnection will select information from information_schema based on the current database.
@@ -210,28 +209,4 @@ func InspectMySQLSchema(r io.Reader) Inspector {
 
 		return nil
 	}
-}
-
-func Quote(str string) string {
-	runes := []rune(str)
-	buffer := bytes.NewBufferString("")
-	buffer.WriteRune('\'')
-	for i, runeLength := 0, len(runes); i < runeLength; i++ {
-		switch runes[i] {
-		case '\\', '\'':
-			buffer.WriteRune('\\')
-			buffer.WriteRune(runes[i])
-		case 0:
-			buffer.WriteRune('\\')
-			buffer.WriteRune('0')
-		case '\032':
-			buffer.WriteRune('\\')
-			buffer.WriteRune('Z')
-		default:
-			buffer.WriteRune(runes[i])
-		}
-	}
-	buffer.WriteRune('\'')
-
-	return buffer.String()
 }

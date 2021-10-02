@@ -45,14 +45,18 @@ func Inserts(wg *errgroup.Group, fn func(stmt string) error, batchSize int) func
 					}
 				}
 
-				_, err = fmt.Fprintf(w, ";\n")
-				if err != nil {
-					return
-				}
+				stmt := buf.String()
 
-				err = fn(buf.String())
-				if err != nil {
-					return
+				if stmt != "" {
+					_, err = fmt.Fprintf(w, ";\n")
+					if err != nil {
+						return
+					}
+
+					err = fn(stmt)
+					if err != nil {
+						return
+					}
 				}
 
 				buf.Reset()

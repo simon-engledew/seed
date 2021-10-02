@@ -7,21 +7,30 @@ import (
 	"sync"
 )
 
+type Value struct {
+	Value string
+	Quote bool
+}
+
+func NewValue(v string, q bool) *Value {
+	return &Value{Value: v, Quote: q}
+}
+
 type ValueGenerator interface {
-	Value(ctx context.Context) string
+	Value(ctx context.Context) *Value
 }
 
 func Counter() ValueGenerator {
 	c := uint64(0)
-	return Locked(func() string {
+	return Locked(func() *Value {
 		c += 1
-		return strconv.FormatUint(c, 10)
+		return NewValue(strconv.FormatUint(c, 10), false)
 	})
 }
 
-func Locked(fn func() string) ValueGenerator {
+func Locked(fn func() *Value) ValueGenerator {
 	var m sync.Mutex
-	return Func(func(ctx context.Context) string {
+	return Func(func(ctx context.Context) *Value {
 		m.Lock()
 		defer m.Unlock()
 		return fn()
@@ -34,8 +43,8 @@ var fakers = sync.Pool{
 	},
 }
 
-func Faker(fn func(*gofakeit.Faker) string) ValueGenerator {
-	return Func(func(ctx context.Context) string {
+func Faker(fn func(*gofakeit.Faker) *Value) ValueGenerator {
+	return Func(func(ctx context.Context) *Value {
 		f := fakers.Get().(*gofakeit.Faker)
 		defer fakers.Put(f)
 		return fn(f)
@@ -43,7 +52,7 @@ func Faker(fn func(*gofakeit.Faker) string) ValueGenerator {
 }
 
 func Format(fmt string) ValueGenerator {
-	return Faker(func(f *gofakeit.Faker) string {
-		return f.Generate(fmt)
+	return Faker(func(f *gofakeit.Faker) *Value {
+		return NewValue(f.Generate(fmt), true)
 	})
 }
