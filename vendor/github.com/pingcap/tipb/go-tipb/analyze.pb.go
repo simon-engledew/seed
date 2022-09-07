@@ -8,7 +8,6 @@
 		analyze.proto
 		checksum.proto
 		executor.proto
-		explain.proto
 		expression.proto
 		metadata.proto
 		resourcetag.proto
@@ -55,13 +54,6 @@
 		WindowFrameBound
 		WindowFrame
 		Window
-		ExplainData
-		ExplainOperator
-		AccessObject
-		DynamicPartitionAccessObjects
-		DynamicPartitionAccessObject
-		ScanAccessObject
-		IndexAccess
 		FieldType
 		Expr
 		RpnExpr

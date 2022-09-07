@@ -41,7 +41,7 @@ type Tracer struct {
 	sampler  SamplerV2
 	reporter Reporter
 	metrics  Metrics
-	logger   log.DebugLogger
+	logger   log.Logger
 
 	timeNow      func() time.Time
 	randomNumber func() uint64
@@ -216,10 +216,10 @@ func (t *Tracer) startSpanWithOptions(
 		options.StartTime = t.timeNow()
 	}
 
-	// Predicate whether the given span context is an empty reference
-	// or may be used as parent / debug ID / baggage items source
-	isEmptyReference := func(ctx SpanContext) bool {
-		return !ctx.IsValid() && !ctx.isDebugIDContainerOnly() && len(ctx.baggage) == 0
+	// Predicate whether the given span context is a valid reference
+	// which may be used as parent / debug ID / baggage items source
+	isValidReference := func(ctx SpanContext) bool {
+		return ctx.IsValid() || ctx.isDebugIDContainerOnly() || len(ctx.baggage) != 0
 	}
 
 	var references []Reference
@@ -235,7 +235,7 @@ func (t *Tracer) startSpanWithOptions(
 				reflect.ValueOf(ref.ReferencedContext)))
 			continue
 		}
-		if isEmptyReference(ctxRef) {
+		if !isValidReference(ctxRef) {
 			continue
 		}
 
@@ -245,17 +245,14 @@ func (t *Tracer) startSpanWithOptions(
 			continue
 		}
 
-		if ctxRef.IsValid() {
-			// we don't want empty context that contains only debug-id or baggage
-			references = append(references, Reference{Type: ref.Type, Context: ctxRef})
-		}
+		references = append(references, Reference{Type: ref.Type, Context: ctxRef})
 
 		if !hasParent {
 			parent = ctxRef
 			hasParent = ref.Type == opentracing.ChildOfRef
 		}
 	}
-	if !hasParent && !isEmptyReference(parent) {
+	if !hasParent && isValidReference(parent) {
 		// If ChildOfRef wasn't found but a FollowFromRef exists, use the context from
 		// the FollowFromRef as the parent
 		hasParent = true
@@ -320,7 +317,7 @@ func (t *Tracer) startSpanWithOptions(
 	sp.references = references
 	sp.firstInProcess = rpcServer || sp.context.parentID == 0
 
-	if !sp.context.isSamplingFinalized() {
+	if !sp.isSamplingFinalized() {
 		decision := t.sampler.OnCreateSpan(sp)
 		sp.applySamplingDecision(decision, false)
 	}
@@ -369,7 +366,6 @@ func (t *Tracer) Extract(
 
 // Close releases all resources used by the Tracer and flushes any remaining buffered spans.
 func (t *Tracer) Close() error {
-	t.logger.Debugf("closing tracer")
 	t.reporter.Close()
 	t.sampler.Close()
 	if mgr, ok := t.baggageRestrictionManager.(io.Closer); ok {
@@ -413,7 +409,7 @@ func (t *Tracer) newSpan() *Span {
 // calling client-side span, but obviously the server side span is
 // no longer a root span of the trace.
 func (t *Tracer) emitNewSpanMetrics(sp *Span, newTrace bool) {
-	if !sp.context.isSamplingFinalized() {
+	if !sp.isSamplingFinalized() {
 		t.metrics.SpansStartedDelayedSampling.Inc(1)
 		if newTrace {
 			t.metrics.TracesStartedDelayedSampling.Inc(1)
@@ -437,11 +433,9 @@ func (t *Tracer) emitNewSpanMetrics(sp *Span, newTrace bool) {
 }
 
 func (t *Tracer) reportSpan(sp *Span) {
-	ctx := sp.SpanContext()
-
-	if !ctx.isSamplingFinalized() {
+	if !sp.isSamplingFinalized() {
 		t.metrics.SpansFinishedDelayedSampling.Inc(1)
-	} else if ctx.IsSampled() {
+	} else if sp.context.IsSampled() {
 		t.metrics.SpansFinishedSampled.Inc(1)
 	} else {
 		t.metrics.SpansFinishedNotSampled.Inc(1)
@@ -450,7 +444,7 @@ func (t *Tracer) reportSpan(sp *Span) {
 	// Note: if the reporter is processing Span asynchronously then it needs to Retain() the span,
 	// and then Release() it when no longer needed.
 	// Otherwise, the span may be reused for another trace and its data may be overwritten.
-	if ctx.IsSampled() {
+	if sp.context.IsSampled() {
 		t.reporter.Report(sp)
 	}
 

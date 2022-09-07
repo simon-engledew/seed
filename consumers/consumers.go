@@ -8,4 +8,4 @@ import (
 
 // Consumer returns a callback that takes generated rows and turns them into a format the database can import.
 type Consumer func(context.Context, *errgroup.Group) func(t string, c []string, rows chan []*generators.Value)
-type RawConsumer func(context.Context, *errgroup.Group) func(t string, c []string, rows chan []string)
+type rawConsumer func(context.Context, *errgroup.Group) func(t string, c []string, rows chan []string)

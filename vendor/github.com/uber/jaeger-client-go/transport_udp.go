@@ -15,12 +15,10 @@
 package jaeger
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
 	"github.com/uber/jaeger-client-go/internal/reporterstats"
-	"github.com/uber/jaeger-client-go/log"
 	"github.com/uber/jaeger-client-go/thrift"
 	j "github.com/uber/jaeger-client-go/thrift-gen/jaeger"
 	"github.com/uber/jaeger-client-go/utils"
@@ -59,55 +57,33 @@ type udpSender struct {
 	failedToEmitSpans    int64
 }
 
-// UDPTransportParams allows specifying options for initializing a UDPTransport. An instance of this struct should
-// be passed to NewUDPTransportWithParams.
-type UDPTransportParams struct {
-	utils.AgentClientUDPParams
-}
-
-// NewUDPTransportWithParams creates a reporter that submits spans to jaeger-agent.
+// NewUDPTransport creates a reporter that submits spans to jaeger-agent.
 // TODO: (breaking change) move to transport/ package.
-func NewUDPTransportWithParams(params UDPTransportParams) (Transport, error) {
-	if len(params.HostPort) == 0 {
-		params.HostPort = fmt.Sprintf("%s:%d", DefaultUDPSpanServerHost, DefaultUDPSpanServerPort)
+func NewUDPTransport(hostPort string, maxPacketSize int) (Transport, error) {
+	if len(hostPort) == 0 {
+		hostPort = fmt.Sprintf("%s:%d", DefaultUDPSpanServerHost, DefaultUDPSpanServerPort)
 	}
-
-	if params.Logger == nil {
-		params.Logger = log.StdLogger
-	}
-
-	if params.MaxPacketSize == 0 {
-		params.MaxPacketSize = utils.UDPPacketMaxLength
+	if maxPacketSize == 0 {
+		maxPacketSize = utils.UDPPacketMaxLength
 	}
 
 	protocolFactory := thrift.NewTCompactProtocolFactory()
 
 	// Each span is first written to thriftBuffer to determine its size in bytes.
-	thriftBuffer := thrift.NewTMemoryBufferLen(params.MaxPacketSize)
+	thriftBuffer := thrift.NewTMemoryBufferLen(maxPacketSize)
 	thriftProtocol := protocolFactory.GetProtocol(thriftBuffer)
 
-	client, err := utils.NewAgentClientUDPWithParams(params.AgentClientUDPParams)
+	client, err := utils.NewAgentClientUDP(hostPort, maxPacketSize)
 	if err != nil {
 		return nil, err
 	}
 
 	return &udpSender{
 		client:         client,
-		maxSpanBytes:   params.MaxPacketSize - emitBatchOverhead,
+		maxSpanBytes:   maxPacketSize - emitBatchOverhead,
 		thriftBuffer:   thriftBuffer,
 		thriftProtocol: thriftProtocol,
 	}, nil
-}
-
-// NewUDPTransport creates a reporter that submits spans to jaeger-agent.
-// TODO: (breaking change) move to transport/ package.
-func NewUDPTransport(hostPort string, maxPacketSize int) (Transport, error) {
-	return NewUDPTransportWithParams(UDPTransportParams{
-		AgentClientUDPParams: utils.AgentClientUDPParams{
-			HostPort:      hostPort,
-			MaxPacketSize: maxPacketSize,
-		},
-	})
 }
 
 // SetReporterStats implements reporterstats.Receiver.
@@ -117,7 +93,7 @@ func (s *udpSender) SetReporterStats(rs reporterstats.ReporterStats) {
 
 func (s *udpSender) calcSizeOfSerializedThrift(thriftStruct thrift.TStruct) int {
 	s.thriftBuffer.Reset()
-	_ = thriftStruct.Write(context.Background(), s.thriftProtocol)
+	_ = thriftStruct.Write(s.thriftProtocol)
 	return s.thriftBuffer.Len()
 }
 
@@ -156,7 +132,7 @@ func (s *udpSender) Flush() (int, error) {
 	}
 	s.batchSeqNo++
 	batchSeqNo := int64(s.batchSeqNo)
-	err := s.client.EmitBatch(context.Background(), &j.Batch{
+	err := s.client.EmitBatch(&j.Batch{
 		Process: s.process,
 		Spans:   s.spanBuffer,
 		SeqNo:   &batchSeqNo,

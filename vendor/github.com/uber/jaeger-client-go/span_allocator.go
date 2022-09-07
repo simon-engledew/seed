@@ -16,7 +16,7 @@ package jaeger
 
 import "sync"
 
-// SpanAllocator abstraction of managing span allocations
+// SpanAllocator abstraction of managign span allocations
 type SpanAllocator interface {
 	Get() *Span
 	Put(*Span)

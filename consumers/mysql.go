@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func MySQLConsumer(base RawConsumer) Consumer {
+func MySQLConsumer(base rawConsumer) Consumer {
 	return func(ctx context.Context, wg *errgroup.Group) func(t string, c []string, rows chan []*generators.Value) {
 		fn := base(ctx, wg)
 		return func(tableName string, cols []string, rows chan []*generators.Value) {

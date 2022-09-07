@@ -9,7 +9,7 @@ import (
 )
 
 // InsertWriter creates a schema callback that will generate batches of insert statements and stream them to w.
-func InsertWriter(w io.Writer, batchSize int) RawConsumer {
+func InsertWriter(w io.Writer, batchSize int) rawConsumer {
 	var mutex sync.Mutex
 	return func(ctx context.Context, wg *errgroup.Group) func(t string, c []string, rows chan []string) {
 		return Inserts(wg, func(statement string) error {

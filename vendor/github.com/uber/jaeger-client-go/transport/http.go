@@ -16,7 +16,6 @@ package transport
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -168,7 +167,7 @@ func (c *HTTPTransport) send(spans []*j.Span) error {
 func serializeThrift(obj thrift.TStruct) (*bytes.Buffer, error) {
 	t := thrift.NewTMemoryBuffer()
 	p := thrift.NewTBinaryProtocolTransport(t)
-	if err := obj.Write(context.Background(), p); err != nil {
+	if err := obj.Write(p); err != nil {
 		return nil, err
 	}
 	return t.Buffer, nil

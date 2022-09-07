@@ -1,2 +1,5 @@
-/toml.test
-/toml-test
+TAGS
+tags
+.*.swp
+tomlcheck/tomlcheck
+toml.test

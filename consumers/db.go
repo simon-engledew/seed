@@ -11,7 +11,7 @@ type DB interface {
 }
 
 // InsertDB creates a schema callback that will generate batches of insert statements and stream them to db.
-func InsertDB(db DB, batchSize int) RawConsumer {
+func InsertDB(db DB, batchSize int) rawConsumer {
 	return func(ctx context.Context, wg *errgroup.Group) func(t string, c []string, rows chan []string) {
 		return Inserts(wg, func(statement string) error {
 			_, err := db.ExecContext(ctx, statement)

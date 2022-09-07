@@ -20,9 +20,7 @@
 package thrift
 
 import (
-	"context"
 	"errors"
-	"fmt"
 )
 
 const (
@@ -31,51 +29,51 @@ const (
 )
 
 type TProtocol interface {
-	WriteMessageBegin(ctx context.Context, name string, typeId TMessageType, seqid int32) error
-	WriteMessageEnd(ctx context.Context) error
-	WriteStructBegin(ctx context.Context, name string) error
-	WriteStructEnd(ctx context.Context) error
-	WriteFieldBegin(ctx context.Context, name string, typeId TType, id int16) error
-	WriteFieldEnd(ctx context.Context) error
-	WriteFieldStop(ctx context.Context) error
-	WriteMapBegin(ctx context.Context, keyType TType, valueType TType, size int) error
-	WriteMapEnd(ctx context.Context) error
-	WriteListBegin(ctx context.Context, elemType TType, size int) error
-	WriteListEnd(ctx context.Context) error
-	WriteSetBegin(ctx context.Context, elemType TType, size int) error
-	WriteSetEnd(ctx context.Context) error
-	WriteBool(ctx context.Context, value bool) error
-	WriteByte(ctx context.Context, value int8) error
-	WriteI16(ctx context.Context, value int16) error
-	WriteI32(ctx context.Context, value int32) error
-	WriteI64(ctx context.Context, value int64) error
-	WriteDouble(ctx context.Context, value float64) error
-	WriteString(ctx context.Context, value string) error
-	WriteBinary(ctx context.Context, value []byte) error
+	WriteMessageBegin(name string, typeId TMessageType, seqid int32) error
+	WriteMessageEnd() error
+	WriteStructBegin(name string) error
+	WriteStructEnd() error
+	WriteFieldBegin(name string, typeId TType, id int16) error
+	WriteFieldEnd() error
+	WriteFieldStop() error
+	WriteMapBegin(keyType TType, valueType TType, size int) error
+	WriteMapEnd() error
+	WriteListBegin(elemType TType, size int) error
+	WriteListEnd() error
+	WriteSetBegin(elemType TType, size int) error
+	WriteSetEnd() error
+	WriteBool(value bool) error
+	WriteByte(value int8) error
+	WriteI16(value int16) error
+	WriteI32(value int32) error
+	WriteI64(value int64) error
+	WriteDouble(value float64) error
+	WriteString(value string) error
+	WriteBinary(value []byte) error
 
-	ReadMessageBegin(ctx context.Context) (name string, typeId TMessageType, seqid int32, err error)
-	ReadMessageEnd(ctx context.Context) error
-	ReadStructBegin(ctx context.Context) (name string, err error)
-	ReadStructEnd(ctx context.Context) error
-	ReadFieldBegin(ctx context.Context) (name string, typeId TType, id int16, err error)
-	ReadFieldEnd(ctx context.Context) error
-	ReadMapBegin(ctx context.Context) (keyType TType, valueType TType, size int, err error)
-	ReadMapEnd(ctx context.Context) error
-	ReadListBegin(ctx context.Context) (elemType TType, size int, err error)
-	ReadListEnd(ctx context.Context) error
-	ReadSetBegin(ctx context.Context) (elemType TType, size int, err error)
-	ReadSetEnd(ctx context.Context) error
-	ReadBool(ctx context.Context) (value bool, err error)
-	ReadByte(ctx context.Context) (value int8, err error)
-	ReadI16(ctx context.Context) (value int16, err error)
-	ReadI32(ctx context.Context) (value int32, err error)
-	ReadI64(ctx context.Context) (value int64, err error)
-	ReadDouble(ctx context.Context) (value float64, err error)
-	ReadString(ctx context.Context) (value string, err error)
-	ReadBinary(ctx context.Context) (value []byte, err error)
+	ReadMessageBegin() (name string, typeId TMessageType, seqid int32, err error)
+	ReadMessageEnd() error
+	ReadStructBegin() (name string, err error)
+	ReadStructEnd() error
+	ReadFieldBegin() (name string, typeId TType, id int16, err error)
+	ReadFieldEnd() error
+	ReadMapBegin() (keyType TType, valueType TType, size int, err error)
+	ReadMapEnd() error
+	ReadListBegin() (elemType TType, size int, err error)
+	ReadListEnd() error
+	ReadSetBegin() (elemType TType, size int, err error)
+	ReadSetEnd() error
+	ReadBool() (value bool, err error)
+	ReadByte() (value int8, err error)
+	ReadI16() (value int16, err error)
+	ReadI32() (value int32, err error)
+	ReadI64() (value int64, err error)
+	ReadDouble() (value float64, err error)
+	ReadString() (value string, err error)
+	ReadBinary() (value []byte, err error)
 
-	Skip(ctx context.Context, fieldType TType) (err error)
-	Flush(ctx context.Context) (err error)
+	Skip(fieldType TType) (err error)
+	Flush() (err error)
 
 	Transport() TTransport
 }
@@ -84,94 +82,94 @@ type TProtocol interface {
 const DEFAULT_RECURSION_DEPTH = 64
 
 // Skips over the next data element from the provided input TProtocol object.
-func SkipDefaultDepth(ctx context.Context, prot TProtocol, typeId TType) (err error) {
-	return Skip(ctx, prot, typeId, DEFAULT_RECURSION_DEPTH)
+func SkipDefaultDepth(prot TProtocol, typeId TType) (err error) {
+	return Skip(prot, typeId, DEFAULT_RECURSION_DEPTH)
 }
 
 // Skips over the next data element from the provided input TProtocol object.
-func Skip(ctx context.Context, self TProtocol, fieldType TType, maxDepth int) (err error) {
-
-	if maxDepth <= 0 {
-		return NewTProtocolExceptionWithType(DEPTH_LIMIT, errors.New("Depth limit exceeded"))
+func Skip(self TProtocol, fieldType TType, maxDepth int) (err error) {
+	
+    if maxDepth <= 0 {
+		return NewTProtocolExceptionWithType( DEPTH_LIMIT, errors.New("Depth limit exceeded"))
 	}
 
 	switch fieldType {
+	case STOP:
+		return
 	case BOOL:
-		_, err = self.ReadBool(ctx)
+		_, err = self.ReadBool()
 		return
 	case BYTE:
-		_, err = self.ReadByte(ctx)
+		_, err = self.ReadByte()
 		return
 	case I16:
-		_, err = self.ReadI16(ctx)
+		_, err = self.ReadI16()
 		return
 	case I32:
-		_, err = self.ReadI32(ctx)
+		_, err = self.ReadI32()
 		return
 	case I64:
-		_, err = self.ReadI64(ctx)
+		_, err = self.ReadI64()
 		return
 	case DOUBLE:
-		_, err = self.ReadDouble(ctx)
+		_, err = self.ReadDouble()
 		return
 	case STRING:
-		_, err = self.ReadString(ctx)
+		_, err = self.ReadString()
 		return
 	case STRUCT:
-		if _, err = self.ReadStructBegin(ctx); err != nil {
+		if _, err = self.ReadStructBegin(); err != nil {
 			return err
 		}
 		for {
-			_, typeId, _, _ := self.ReadFieldBegin(ctx)
+			_, typeId, _, _ := self.ReadFieldBegin()
 			if typeId == STOP {
 				break
 			}
-			err := Skip(ctx, self, typeId, maxDepth-1)
+			err := Skip(self, typeId, maxDepth-1)
 			if err != nil {
 				return err
 			}
-			self.ReadFieldEnd(ctx)
+			self.ReadFieldEnd()
 		}
-		return self.ReadStructEnd(ctx)
+		return self.ReadStructEnd()
 	case MAP:
-		keyType, valueType, size, err := self.ReadMapBegin(ctx)
+		keyType, valueType, size, err := self.ReadMapBegin()
 		if err != nil {
 			return err
 		}
 		for i := 0; i < size; i++ {
-			err := Skip(ctx, self, keyType, maxDepth-1)
+			err := Skip(self, keyType, maxDepth-1)
 			if err != nil {
 				return err
 			}
-			self.Skip(ctx, valueType)
+			self.Skip(valueType)
 		}
-		return self.ReadMapEnd(ctx)
+		return self.ReadMapEnd()
 	case SET:
-		elemType, size, err := self.ReadSetBegin(ctx)
+		elemType, size, err := self.ReadSetBegin()
 		if err != nil {
 			return err
 		}
 		for i := 0; i < size; i++ {
-			err := Skip(ctx, self, elemType, maxDepth-1)
+			err := Skip(self, elemType, maxDepth-1)
 			if err != nil {
 				return err
 			}
 		}
-		return self.ReadSetEnd(ctx)
+		return self.ReadSetEnd()
 	case LIST:
-		elemType, size, err := self.ReadListBegin(ctx)
+		elemType, size, err := self.ReadListBegin()
 		if err != nil {
 			return err
 		}
 		for i := 0; i < size; i++ {
-			err := Skip(ctx, self, elemType, maxDepth-1)
+			err := Skip(self, elemType, maxDepth-1)
 			if err != nil {
 				return err
 			}
 		}
-		return self.ReadListEnd(ctx)
-	default:
-		return NewTProtocolExceptionWithType(INVALID_DATA, errors.New(fmt.Sprintf("Unknown data type %d", fieldType)))
+		return self.ReadListEnd()
 	}
 	return nil
 }

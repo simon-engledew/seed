@@ -35,7 +35,7 @@ type SamplerOptionsFactory struct{}
 type samplerOptions struct {
 	metrics                 *Metrics
 	sampler                 SamplerV2
-	logger                  log.DebugLogger
+	logger                  Logger
 	samplingServerURL       string
 	samplingRefreshInterval time.Duration
 	samplingFetcher         SamplingStrategyFetcher
@@ -79,7 +79,7 @@ func (SamplerOptionsFactory) InitialSampler(sampler Sampler) SamplerOption {
 // Logger creates a SamplerOption that sets the logger used by the sampler.
 func (SamplerOptionsFactory) Logger(logger Logger) SamplerOption {
 	return func(o *samplerOptions) {
-		o.logger = log.DebugLogAdapter(logger)
+		o.logger = logger
 	}
 }
 
@@ -140,7 +140,10 @@ func (o *samplerOptions) applyOptionsAndDefaults(opts ...SamplerOption) *sampler
 		o.samplingRefreshInterval = defaultSamplingRefreshInterval
 	}
 	if o.samplingFetcher == nil {
-		o.samplingFetcher = newHTTPSamplingStrategyFetcher(o.samplingServerURL, o.logger)
+		o.samplingFetcher = &httpSamplingStrategyFetcher{
+			serverURL: o.samplingServerURL,
+			logger:    o.logger,
+		}
 	}
 	if o.samplingParser == nil {
 		o.samplingParser = new(samplingStrategyParser)
