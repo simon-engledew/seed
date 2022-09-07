@@ -67,12 +67,16 @@ func (g *RowGenerator) InsertContext(ctx context.Context, table string, dist dis
 
 		withStack := WithParents(ctx, g.stack)
 
+		i := 0
+
 		for dist() {
 			row := make(Row, 0, len(columns))
 
 			for _, column := range columns {
 				row = append(row, column.Generator.Value(withStack))
 			}
+
+			i++
 
 			channel <- row
 

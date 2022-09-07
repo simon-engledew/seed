@@ -34,8 +34,7 @@ func Inserts(wg *errgroup.Group, fn func(stmt string) error, batchSize int) func
 
 				i := 1
 				for ; i < batchSize; i += 1 {
-					row = <-rows
-					if row == nil {
+					if row = <-rows; row == nil {
 						break
 					}
 

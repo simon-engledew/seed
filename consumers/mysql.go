@@ -27,7 +27,7 @@ func MySQLConsumer(base RawConsumer) Consumer {
 					}
 					quotedRows <- quotedRow
 				}
-
+				close(quotedRows)
 				return nil
 			})
 			fn(QuoteIdentifier(tableName), quotedCols, quotedRows)
