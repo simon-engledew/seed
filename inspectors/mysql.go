@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/brianvoe/gofakeit/v6"
-	"github.com/pingcap/parser"
-	"github.com/pingcap/parser/ast"
-	"github.com/pingcap/parser/mysql"
-	"github.com/pingcap/parser/types"
+	"github.com/pingcap/tidb/parser"
+	"github.com/pingcap/tidb/parser/ast"
+	"github.com/pingcap/tidb/parser/mysql"
+	"github.com/pingcap/tidb/parser/types"
 	_ "github.com/pingcap/tidb/types/parser_driver"
 	"github.com/simon-engledew/seed/generators"
 	"io"
@@ -190,17 +190,17 @@ func InspectMySQLSchema(r io.Reader) Inspector {
 
 					_, isPrimary := primaryKey[columnName]
 
-					length := col.Tp.Flen
+					length := col.Tp.GetFlen()
 					if length == types.UnspecifiedLength {
-						length, _ = mysql.GetDefaultFieldLengthAndDecimal(col.Tp.Tp)
+						length, _ = mysql.GetDefaultFieldLengthAndDecimal(col.Tp.GetType())
 					}
 
 					fn(tableName, columnName, &MySQLColumn{
 						Name:       columnName,
 						IsPrimary:  isPrimary,
-						IsUnsigned: mysql.HasUnsignedFlag(col.Tp.Flag),
+						IsUnsigned: mysql.HasUnsignedFlag(col.Tp.GetFlag()),
 						ColumnType: col.Tp.CompactStr(),
-						DataType:   types.TypeToStr(col.Tp.Tp, col.Tp.Charset),
+						DataType:   types.TypeToStr(col.Tp.GetType(), col.Tp.GetCharset()),
 						Length:     length,
 					})
 				}

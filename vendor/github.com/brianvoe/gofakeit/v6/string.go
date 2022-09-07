@@ -1,6 +1,6 @@
 package gofakeit
 
-import rand "math/rand"
+import "math/rand"
 
 // Letter will generate a single random lower case ASCII letter
 func Letter() string { return letter(globalFaker.Rand) }
@@ -27,6 +27,14 @@ func letterN(r *rand.Rand, n uint) string {
 	}
 	return string(out)
 }
+
+// Vowel will generate a single random lower case vowel
+func Vowel() string { return vowel(globalFaker.Rand) }
+
+// Vowel will generate a single random lower case vowel
+func (f *Faker) Vowel() string { return vowel(f.Rand) }
+
+func vowel(r *rand.Rand) string { return string(randCharacter(r, vowels)) }
 
 // Digit will generate a single ASCII digit
 func Digit() string { return digit(globalFaker.Rand) }
@@ -62,10 +70,10 @@ func (f *Faker) Numerify(str string) string { return numerify(f.Rand, str) }
 
 func numerify(r *rand.Rand, str string) string { return replaceWithNumbers(r, str) }
 
-// Lexify will replace ? will random generated letters
+// Lexify will replace ? with random generated letters
 func Lexify(str string) string { return lexify(globalFaker.Rand, str) }
 
-// Lexify will replace ? will random generated letters
+// Lexify will replace ? with random generated letters
 func (f *Faker) Lexify(str string) string { return lexify(f.Rand, str) }
 
 func lexify(r *rand.Rand, str string) string { return replaceWithLetters(r, str) }
@@ -142,6 +150,17 @@ func addStringLookup() {
 		},
 	})
 
+	AddFuncLookup("vowel", Info{
+		Display:     "Vowel",
+		Category:    "string",
+		Description: "Generate a single random lower case vowel",
+		Example:     "a",
+		Output:      "string",
+		Generate: func(r *rand.Rand, m *MapParams, info *Info) (interface{}, error) {
+			return vowel(r), nil
+		},
+	})
+
 	AddFuncLookup("digit", Info{
 		Display:     "Digit",
 		Category:    "string",
@@ -194,11 +213,11 @@ func addStringLookup() {
 	AddFuncLookup("lexify", Info{
 		Display:     "Lexify",
 		Category:    "string",
-		Description: "Replace ? will random generated letters",
+		Description: "Replace ? with random generated letters",
 		Example:     "?????@??????.com => billy@mister.com",
 		Output:      "string",
 		Params: []Param{
-			{Field: "str", Display: "String", Type: "string", Description: "String value to replace #'s"},
+			{Field: "str", Display: "String", Type: "string", Description: "String value to replace ?'s"},
 		},
 		Generate: func(r *rand.Rand, m *MapParams, info *Info) (interface{}, error) {
 			str, err := info.GetString(m, "str")
@@ -216,6 +235,7 @@ func addStringLookup() {
 		Description: "Shuffle an array of strings",
 		Example:     "hello,world,whats,up => whats,world,hello,up",
 		Output:      "[]string",
+		ContentType: "application/json",
 		Params: []Param{
 			{Field: "strs", Display: "Strings", Type: "[]string", Description: "Delimited separated strings"},
 		},

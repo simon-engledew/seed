@@ -2,7 +2,6 @@ package gofakeit
 
 import (
 	"errors"
-	"fmt"
 	"math/rand"
 	"reflect"
 	"strconv"
@@ -47,44 +46,55 @@ func r(ra *rand.Rand, t reflect.Type, v reflect.Value, tag string, size int) err
 	case reflect.Array, reflect.Slice:
 		return rSlice(ra, t, v, tag, size)
 	case reflect.Map:
-		return rMap(ra, t, v, tag)
+		return rMap(ra, t, v, tag, size)
 	}
 
 	return nil
 }
 
-func rStruct(ra *rand.Rand, t reflect.Type, v reflect.Value, tag string) error {
-	// If tag is set lets try to set the struct values from the tag response
-	if tag != "" {
-		fName, fParams := parseNameAndParamsFromTag(tag)
-		// Check to see if its a replaceable lookup function
-		if info := GetFuncLookup(fName); info != nil {
-			// Parse map params
-			mapParams := parseMapParams(info, fParams)
+func rCustom(ra *rand.Rand, t reflect.Type, v reflect.Value, tag string) error {
+	// If tag is empty return error
+	if tag == "" {
+		return errors.New("tag is empty")
+	}
 
-			// Call function
-			fValue, err := info.Generate(ra, mapParams, info)
-			if err != nil {
-				return err
-			}
+	fName, fParams := parseNameAndParamsFromTag(tag)
+	// Check to see if its a replaceable lookup function
+	if info := GetFuncLookup(fName); info != nil {
+		// Parse map params
+		mapParams := parseMapParams(info, fParams)
 
-			// Create new element of expected type
-			field := reflect.New(reflect.TypeOf(fValue))
-			field.Elem().Set(reflect.ValueOf(fValue))
-
-			// Check if element is pointer if so
-			// grab the underlyning value before setting
-			fieldElem := field.Elem()
-			if fieldElem.Kind() == reflect.Ptr {
-				v.Set(fieldElem.Elem())
-			} else {
-				v.Set(fieldElem)
-			}
-
-			// If a function is called to set the struct
-			// stop from going through sub fields
-			return nil
+		// Call function
+		fValue, err := info.Generate(ra, mapParams, info)
+		if err != nil {
+			return err
 		}
+
+		// Create new element of expected type
+		field := reflect.New(reflect.TypeOf(fValue))
+		field.Elem().Set(reflect.ValueOf(fValue))
+
+		// Check if element is pointer if so
+		// grab the underlyning value before setting
+		fieldElem := field.Elem()
+		if fieldElem.Kind() == reflect.Ptr {
+			v.Set(fieldElem.Elem())
+		} else {
+			v.Set(fieldElem)
+		}
+
+		// If a function is called to set the struct
+		// stop from going through sub fields
+		return nil
+	}
+
+	return errors.New("function not found")
+}
+
+func rStruct(ra *rand.Rand, t reflect.Type, v reflect.Value, tag string) error {
+	// Check if tag exists, if so run custom function
+	if t.Name() != "" && tag != "" {
+		return rCustom(ra, t, v, tag)
 	}
 
 	n := t.NumField()
@@ -131,44 +141,6 @@ func rStruct(ra *rand.Rand, t reflect.Type, v reflect.Value, tag string) error {
 	return nil
 }
 
-func rMap(ra *rand.Rand, t reflect.Type, v reflect.Value, tag string) error {
-	// If tag is set lets try to set the struct values from the tag response
-	if tag != "" {
-		fName, fParams := parseNameAndParamsFromTag(tag)
-		// Check to see if its a replaceable lookup function
-		if info := GetFuncLookup(fName); info != nil {
-			// Parse map params
-			mapParams := parseMapParams(info, fParams)
-
-			// Call function
-			fValue, err := info.Generate(ra, mapParams, info)
-			if err != nil {
-				return err
-			} else if reflect.TypeOf(fValue) != t {
-				return fmt.Errorf("expected value of type: %s but got value of: %s", t, reflect.TypeOf(fValue))
-			}
-
-			// Create new element of expected type
-			field := reflect.New(reflect.TypeOf(fValue))
-			field.Elem().Set(reflect.ValueOf(fValue))
-
-			// Check if element is pointer if so
-			// grab the underlyning value before setting
-			fieldElem := field.Elem()
-			if fieldElem.Kind() == reflect.Ptr {
-				v.Set(fieldElem.Elem())
-			} else {
-				v.Set(fieldElem)
-			}
-
-			// If a function is called to set the struct
-			// stop from going through sub fields
-			return nil
-		}
-	}
-	return nil
-}
-
 func rPointer(ra *rand.Rand, t reflect.Type, v reflect.Value, tag string, size int) error {
 	elemT := t.Elem()
 	if v.IsNil() {
@@ -191,7 +163,12 @@ func rPointer(ra *rand.Rand, t reflect.Type, v reflect.Value, tag string, size i
 func rSlice(ra *rand.Rand, t reflect.Type, v reflect.Value, tag string, size int) error {
 	// If you cant even set it dont even try
 	if !v.CanSet() {
-		return errors.New("Cannot set slice")
+		return errors.New("cannot set slice")
+	}
+
+	// Check if tag exists, if so run custom function
+	if t.Name() != "" && tag != "" {
+		return rCustom(ra, t, v, tag)
 	}
 
 	// Grab original size to use if needed for sub arrays
@@ -209,27 +186,69 @@ func rSlice(ra *rand.Rand, t reflect.Type, v reflect.Value, tag string, size int
 	// Get the element type
 	elemT := t.Elem()
 
-	// If values are already set fill them up, otherwise append
-	if v.Len() != 0 {
-		// Loop through the elements length and set based upon the index
-		for i := 0; i < size; i++ {
-			nv := reflect.New(elemT)
-			err := r(ra, elemT, nv.Elem(), tag, ogSize)
-			if err != nil {
-				return err
-			}
-			v.Index(i).Set(reflect.Indirect(nv))
+	// Loop through the elements length and set based upon the index
+	for i := 0; i < size; i++ {
+		nv := reflect.New(elemT)
+		err := r(ra, elemT, nv.Elem(), tag, ogSize)
+		if err != nil {
+			return err
 		}
-	} else {
-		// Loop through the size and append and set
-		for i := 0; i < size; i++ {
-			nv := reflect.New(elemT)
-			err := r(ra, elemT, nv.Elem(), tag, ogSize)
-			if err != nil {
-				return err
-			}
+
+		// If values are already set fill them up, otherwise append
+		if elemLen != 0 {
+			v.Index(i).Set(reflect.Indirect(nv))
+		} else {
 			v.Set(reflect.Append(reflect.Indirect(v), reflect.Indirect(nv)))
 		}
+	}
+
+	return nil
+}
+
+func rMap(ra *rand.Rand, t reflect.Type, v reflect.Value, tag string, size int) error {
+	// If you cant even set it dont even try
+	if !v.CanSet() {
+		return errors.New("cannot set slice")
+	}
+
+	// Check if tag exists, if so run custom function
+	if t.Name() != "" && tag != "" {
+		return rCustom(ra, t, v, tag)
+	}
+
+	// Set a size
+	newSize := size
+	if newSize == -1 {
+		newSize = number(ra, 1, 10)
+	}
+
+	// Create new map based upon map key value type
+	mapType := reflect.MapOf(t.Key(), t.Elem())
+	newMap := reflect.MakeMap(mapType)
+
+	for i := 0; i < newSize; i++ {
+		// Create new key
+		mapIndex := reflect.New(t.Key())
+		err := r(ra, t.Key(), mapIndex.Elem(), "", -1)
+		if err != nil {
+			return err
+		}
+
+		// Create new value
+		mapValue := reflect.New(t.Elem())
+		err = r(ra, t.Elem(), mapValue.Elem(), "", -1)
+		if err != nil {
+			return err
+		}
+
+		newMap.SetMapIndex(mapIndex.Elem(), mapValue.Elem())
+	}
+
+	// Set newMap into struct field
+	if t.Kind() == reflect.Ptr {
+		v.Set(newMap.Elem())
+	} else {
+		v.Set(newMap)
 	}
 
 	return nil
@@ -343,21 +362,31 @@ func rBool(ra *rand.Rand, v reflect.Value, tag string) error {
 // rTime will set a time.Time field the best it can from either the default date tag or from the generate tag
 func rTime(ra *rand.Rand, t reflect.StructField, v reflect.Value, tag string) error {
 	if tag != "" {
-		timeFormat, timeFormatOK := t.Tag.Lookup("format")
-		if !timeFormatOK {
-			timeFormat = time.RFC3339
-		}
-
-		timeFormat = javaDateFormatToGolangDateFormat(timeFormat)
-
 		// Generate time
 		timeOutput := generate(ra, tag)
 
+		// Check to see if they are passing in a format	to parse the time
+		timeFormat, timeFormatOK := t.Tag.Lookup("format")
+		if timeFormatOK {
+			timeFormat = javaDateFormatToGolangDateFormat(timeFormat)
+		} else {
+			// If tag == "{date}" use time.RFC3339
+			// They are attempting to use the default date lookup
+			if tag == "{date}" {
+				timeFormat = time.RFC3339
+			} else {
+				// Default format of time.Now().String()
+				timeFormat = "2006-01-02 15:04:05.999999999 -0700 MST"
+			}
+		}
+
 		// If output is larger than format cut the output
+		// This helps us avoid errors from time.Parse
 		if len(timeOutput) > len(timeFormat) {
 			timeOutput = timeOutput[:len(timeFormat)]
 		}
 
+		// Attempt to parse the time
 		timeStruct, err := time.Parse(timeFormat, timeOutput)
 		if err != nil {
 			return err

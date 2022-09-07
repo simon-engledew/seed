@@ -1,3 +1,23 @@
+// Copyright 2021 TiKV Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// NOTE: The code in this file is based on code from the
+// TiDB project, licensed under the Apache License v 2.0
+//
+// https://github.com/pingcap/tidb/tree/cc5e161ac06827589c4966674597c137cc9e809c/store/tikv/config/client.go
+//
+
 // Copyright 2021 PingCAP, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -8,6 +28,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
@@ -61,7 +82,8 @@ type TiKVClient struct {
 	StoreLivenessTimeout string           `toml:"store-liveness-timeout" json:"store-liveness-timeout"`
 	CoprCache            CoprocessorCache `toml:"copr-cache" json:"copr-cache"`
 	// TTLRefreshedTxnSize controls whether a transaction should update its TTL or not.
-	TTLRefreshedTxnSize int64 `toml:"ttl-refreshed-txn-size" json:"ttl-refreshed-txn-size"`
+	TTLRefreshedTxnSize      int64  `toml:"ttl-refreshed-txn-size" json:"ttl-refreshed-txn-size"`
+	ResolveLockLiteThreshold uint64 `toml:"resolve-lock-lite-threshold" json:"resolve-lock-lite-threshold"`
 }
 
 // AsyncCommit is the config for the async commit feature. The switch to enable it is a system variable.
@@ -128,6 +150,8 @@ func DefaultTiKVClient() TiKVClient {
 			AdmissionMaxResultMB:  10,
 			AdmissionMinProcessMs: 5,
 		},
+
+		ResolveLockLiteThreshold: 16,
 	}
 }
 

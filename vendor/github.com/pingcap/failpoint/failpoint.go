@@ -8,6 +8,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
@@ -27,7 +28,7 @@ type (
 	// Value represents value that retrieved from failpoint terms.
 	// It can be used as following types:
 	// 1. val.(int)      // GO_FAILPOINTS="failpoint-name=return(1)"
-	// 2. val.(string)   // GO_FAILPOINTS="failpoint-name=return('1')"
+	// 2. val.(string)   // GO_FAILPOINTS="failpoint-name=return(\"1\")"
 	// 3. val.(bool)     // GO_FAILPOINTS="failpoint-name=return(true)"
 	Value interface{}
 
@@ -81,21 +82,18 @@ func (fp *Failpoint) EnableWith(inTerms string, action func() error) error {
 }
 
 // Disable stops a failpoint
-func (fp *Failpoint) Disable() error {
+func (fp *Failpoint) Disable() {
 	select {
 	case <-fp.waitChan:
-		return ErrDisabled
+		// already disabled
+		return
 	default:
 		close(fp.waitChan)
 	}
 
 	fp.mu.Lock()
 	defer fp.mu.Unlock()
-	if fp.t == nil {
-		return ErrDisabled
-	}
 	fp.t = nil
-	return nil
 }
 
 // Eval evaluates a failpoint's value, It will return the evaluated value or

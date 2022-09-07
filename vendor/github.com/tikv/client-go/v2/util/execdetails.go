@@ -1,3 +1,23 @@
+// Copyright 2021 TiKV Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// NOTE: The code in this file is based on code from the
+// TiDB project, licensed under the Apache License v 2.0
+//
+// https://github.com/pingcap/tidb/tree/cc5e161ac06827589c4966674597c137cc9e809c/store/tikv/util/execdetails.go
+//
+
 // Copyright 2021 PingCAP, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -8,6 +28,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
@@ -193,6 +214,9 @@ type ScanDetail struct {
 	// It does not include deleted version or RocksDB tombstone keys.
 	// For Coprocessor requests, it includes keys that has been filtered out by Selection.
 	ProcessedKeys int64
+	// Number of bytes of user key-value pairs scanned from the storage, i.e.
+	// total size of data returned from MVCC layer.
+	ProcessedKeysSize int64
 	// RocksdbDeleteSkippedCount is the total number of deletes and single deletes skipped over during
 	// iteration, i.e. how many RocksDB tombstones are skipped.
 	RocksdbDeleteSkippedCount uint64
@@ -210,6 +234,7 @@ type ScanDetail struct {
 func (sd *ScanDetail) Merge(scanDetail *ScanDetail) {
 	atomic.AddInt64(&sd.TotalKeys, scanDetail.TotalKeys)
 	atomic.AddInt64(&sd.ProcessedKeys, scanDetail.ProcessedKeys)
+	atomic.AddInt64(&sd.ProcessedKeysSize, scanDetail.ProcessedKeysSize)
 	atomic.AddUint64(&sd.RocksdbDeleteSkippedCount, scanDetail.RocksdbDeleteSkippedCount)
 	atomic.AddUint64(&sd.RocksdbKeySkippedCount, scanDetail.RocksdbKeySkippedCount)
 	atomic.AddUint64(&sd.RocksdbBlockCacheHitCount, scanDetail.RocksdbBlockCacheHitCount)
@@ -228,6 +253,8 @@ func (sd *ScanDetail) String() string {
 	buf.WriteString("scan_detail: {")
 	buf.WriteString("total_process_keys: ")
 	buf.WriteString(strconv.FormatInt(sd.ProcessedKeys, 10))
+	buf.WriteString(", total_process_keys_size: ")
+	buf.WriteString(strconv.FormatInt(sd.ProcessedKeysSize, 10))
 	buf.WriteString(", total_keys: ")
 	buf.WriteString(strconv.FormatInt(sd.TotalKeys, 10))
 	buf.WriteString(", rocksdb: {")
@@ -251,6 +278,7 @@ func (sd *ScanDetail) MergeFromScanDetailV2(scanDetail *kvrpcpb.ScanDetailV2) {
 	if scanDetail != nil {
 		sd.TotalKeys += int64(scanDetail.TotalVersions)
 		sd.ProcessedKeys += int64(scanDetail.ProcessedVersions)
+		sd.ProcessedKeysSize += int64(scanDetail.ProcessedVersionsSize)
 		sd.RocksdbDeleteSkippedCount += scanDetail.RocksdbDeleteSkippedCount
 		sd.RocksdbKeySkippedCount += scanDetail.RocksdbKeySkippedCount
 		sd.RocksdbBlockCacheHitCount += scanDetail.RocksdbBlockCacheHitCount

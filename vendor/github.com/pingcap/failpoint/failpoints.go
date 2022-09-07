@@ -8,6 +8,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
@@ -139,12 +140,9 @@ func (fps *Failpoints) Disable(failpath string) error {
 
 	fp := fps.reg[failpath]
 	if fp == nil {
-		return errors.Wrapf(ErrDisabled, "error on %s", failpath)
+		return errors.Wrapf(ErrNotExist, "error on %s", failpath)
 	}
-	err := fp.Disable()
-	if err != nil {
-		return errors.Wrapf(err, "error on %s", failpath)
-	}
+	fp.Disable()
 	return nil
 }
 
@@ -206,12 +204,12 @@ func (fps *Failpoints) Eval(failpath string) (Value, error) {
 	fp, found := fps.reg[failpath]
 	fps.mu.RUnlock()
 	if !found {
-		return nil, errors.Wrapf(ErrNotExist, "error on %s", failpath)
+		return nil, ErrNotExist
 	}
 
 	val, err := fp.Eval()
 	if err != nil {
-		return nil, errors.Wrapf(err, "error on %s", failpath)
+		return nil, err
 	}
 	return val, nil
 }

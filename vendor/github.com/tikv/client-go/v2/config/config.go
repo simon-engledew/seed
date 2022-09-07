@@ -1,3 +1,23 @@
+// Copyright 2021 TiKV Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// NOTE: The code in this file is based on code from the
+// TiDB project, licensed under the Apache License v 2.0
+//
+// https://github.com/pingcap/tidb/tree/cc5e161ac06827589c4966674597c137cc9e809c/store/tikv/config/config.go
+//
+
 // Copyright 2021 PingCAP, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -8,6 +28,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
@@ -15,14 +36,12 @@ package config
 
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 	"strings"
-	"sync"
 	"sync/atomic"
 
-	"github.com/pingcap/errors"
-	"github.com/tikv/client-go/v2/logutil"
+	"github.com/pkg/errors"
+	"github.com/tikv/client-go/v2/internal/logutil"
 	"github.com/tikv/client-go/v2/oracle"
 	"github.com/tikv/client-go/v2/util"
 	"go.uber.org/zap"
@@ -57,6 +76,8 @@ type Config struct {
 	Path                  string
 	EnableForwarding      bool
 	TxnScope              string
+	EnableAsyncCommit     bool
+	Enable1PC             bool
 }
 
 // DefaultConfig returns the default configuration.
@@ -72,6 +93,8 @@ func DefaultConfig() Config {
 		Path:                  "",
 		EnableForwarding:      false,
 		TxnScope:              "",
+		EnableAsyncCommit:     false,
+		Enable1PC:             false,
 	}
 }
 
@@ -161,7 +184,7 @@ func ParsePath(path string) (etcdAddrs []string, disableGC bool, err error) {
 	var u *url.URL
 	u, err = url.Parse(path)
 	if err != nil {
-		err = errors.Trace(err)
+		err = errors.WithStack(err)
 		return
 	}
 	if strings.ToLower(u.Scheme) != "tikv" {
@@ -179,39 +202,4 @@ func ParsePath(path string) (etcdAddrs []string, disableGC bool, err error) {
 	}
 	etcdAddrs = strings.Split(u.Host, ",")
 	return
-}
-
-var (
-	internalClientInit sync.Once
-	internalHTTPClient *http.Client
-	internalHTTPSchema string
-)
-
-// InternalHTTPClient is used by TiDB-Server to request other components.
-func InternalHTTPClient() *http.Client {
-	internalClientInit.Do(initInternalClient)
-	return internalHTTPClient
-}
-
-// InternalHTTPSchema specifies use http or https to request other components.
-func InternalHTTPSchema() string {
-	internalClientInit.Do(initInternalClient)
-	return internalHTTPSchema
-}
-
-func initInternalClient() {
-	clusterSecurity := GetGlobalConfig().Security
-	tlsCfg, err := clusterSecurity.ToTLSConfig()
-	if err != nil {
-		logutil.BgLogger().Fatal("could not load cluster ssl", zap.Error(err))
-	}
-	if tlsCfg == nil {
-		internalHTTPSchema = "http"
-		internalHTTPClient = http.DefaultClient
-		return
-	}
-	internalHTTPSchema = "https"
-	internalHTTPClient = &http.Client{
-		Transport: &http.Transport{TLSClientConfig: tlsCfg},
-	}
 }

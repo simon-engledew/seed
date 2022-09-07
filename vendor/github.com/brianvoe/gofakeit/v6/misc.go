@@ -2,6 +2,7 @@ package gofakeit
 
 import (
 	"encoding/hex"
+	"io"
 	"math/rand"
 	"reflect"
 
@@ -27,7 +28,7 @@ func (f *Faker) UUID() string { return uuid(f.Rand) }
 func uuid(r *rand.Rand) string {
 	version := byte(4)
 	uuid := make([]byte, 16)
-	r.Read(uuid)
+	io.ReadFull(r, uuid[:])
 
 	// Set version
 	uuid[6] = (uuid[6] & 0x0f) | (version << 4)
@@ -36,7 +37,6 @@ func uuid(r *rand.Rand) string {
 	uuid[8] = (uuid[8] & 0xbf) | 0x80
 
 	buf := make([]byte, 36)
-	var dash byte = '-'
 	hex.Encode(buf[0:8], uuid[0:4])
 	buf[8] = dash
 	hex.Encode(buf[9:13], uuid[4:6])
@@ -100,6 +100,17 @@ func flipACoin(r *rand.Rand) string {
 	}
 
 	return "Tails"
+}
+
+// RandomMapKey will return a random key from a map
+func RandomMapKey(mapI interface{}) interface{} { return randomMapKey(globalFaker.Rand, mapI) }
+
+// RandomMapKey will return a random key from a map
+func (f *Faker) RandomMapKey(mapI interface{}) interface{} { return randomMapKey(f.Rand, mapI) }
+
+func randomMapKey(r *rand.Rand, mapI interface{}) interface{} {
+	keys := reflect.ValueOf(mapI).MapKeys()
+	return keys[r.Intn(len(keys))].Interface()
 }
 
 // Categories will return a map string array of available data categories and sub categories

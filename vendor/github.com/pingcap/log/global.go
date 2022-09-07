@@ -8,6 +8,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
@@ -70,10 +71,10 @@ func With(fields ...zap.Field) *zap.Logger {
 
 // SetLevel alters the logging level.
 func SetLevel(l zapcore.Level) {
-	_globalP.Load().(*ZapProperties).Level.SetLevel(l)
+	globalProperties.Load().(*ZapProperties).Level.SetLevel(l)
 }
 
 // GetLevel gets the logging level.
 func GetLevel() zapcore.Level {
-	return _globalP.Load().(*ZapProperties).Level.Level()
+	return globalProperties.Load().(*ZapProperties).Level.Level()
 }
