@@ -1,0 +1,386 @@
+# github.com/BurntSushi/toml v1.2.0
+## explicit; go 1.16
+github.com/BurntSushi/toml
+github.com/BurntSushi/toml/internal
+# github.com/benbjohnson/clock v1.3.0
+## explicit; go 1.15
+github.com/benbjohnson/clock
+# github.com/beorn7/perks v1.0.1
+## explicit; go 1.11
+github.com/beorn7/perks/quantile
+# github.com/brianvoe/gofakeit/v6 v6.18.0
+## explicit; go 1.17
+github.com/brianvoe/gofakeit/v6
+github.com/brianvoe/gofakeit/v6/data
+# github.com/cespare/xxhash/v2 v2.1.2
+## explicit; go 1.11
+github.com/cespare/xxhash/v2
+# github.com/coreos/etcd v3.3.27+incompatible
+## explicit
+github.com/coreos/etcd/pkg/fileutil
+github.com/coreos/etcd/pkg/tlsutil
+# github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
+## explicit
+github.com/coreos/go-systemd/journal
+# github.com/coreos/pkg v0.0.0-20220810130054-c7d1c02cb6cf
+## explicit
+github.com/coreos/pkg/capnslog
+# github.com/danjacques/gofslock v0.0.0-20220131014315-6e321f4509c8
+## explicit; go 1.0
+github.com/danjacques/gofslock/fslock
+# github.com/davecgh/go-spew v1.1.1
+## explicit
+github.com/davecgh/go-spew/spew
+# github.com/go-ole/go-ole v1.2.6
+## explicit; go 1.12
+github.com/go-ole/go-ole
+github.com/go-ole/go-ole/oleutil
+# github.com/gogo/protobuf v1.3.2
+## explicit; go 1.15
+github.com/gogo/protobuf/gogoproto
+github.com/gogo/protobuf/proto
+github.com/gogo/protobuf/protoc-gen-gogo/descriptor
+# github.com/golang/protobuf v1.5.2
+## explicit; go 1.9
+github.com/golang/protobuf/jsonpb
+github.com/golang/protobuf/proto
+github.com/golang/protobuf/ptypes
+github.com/golang/protobuf/ptypes/any
+github.com/golang/protobuf/ptypes/duration
+github.com/golang/protobuf/ptypes/timestamp
+# github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
+## explicit; go 1.14
+github.com/grpc-ecosystem/go-grpc-middleware
+github.com/grpc-ecosystem/go-grpc-middleware/logging
+github.com/grpc-ecosystem/go-grpc-middleware/logging/settable
+github.com/grpc-ecosystem/go-grpc-middleware/logging/zap
+github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap
+github.com/grpc-ecosystem/go-grpc-middleware/tags
+# github.com/jinzhu/inflection v1.0.0
+## explicit
+github.com/jinzhu/inflection
+# github.com/jpillora/longestcommon v0.0.0-20161227235612-adb9d91ee629
+## explicit
+github.com/jpillora/longestcommon
+# github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0
+## explicit; go 1.16
+github.com/lufia/plan9stats
+# github.com/matttproud/golang_protobuf_extensions v1.0.1
+## explicit
+github.com/matttproud/golang_protobuf_extensions/pbutil
+# github.com/opentracing/basictracer-go v1.0.0
+## explicit
+github.com/opentracing/basictracer-go
+github.com/opentracing/basictracer-go/wire
+# github.com/opentracing/opentracing-go v1.2.0
+## explicit; go 1.14
+github.com/opentracing/opentracing-go
+github.com/opentracing/opentracing-go/ext
+github.com/opentracing/opentracing-go/log
+# github.com/pingcap/errors v0.11.5-0.20211224045212-9687c2b0f87c
+## explicit; go 1.14
+github.com/pingcap/errors
+# github.com/pingcap/failpoint v0.0.0-20220801062533-2eaa32854a6c
+## explicit; go 1.13
+github.com/pingcap/failpoint
+# github.com/pingcap/kvproto v0.0.0-20220907041035-7c4e90506336
+## explicit; go 1.13
+github.com/pingcap/kvproto/pkg/coprocessor
+github.com/pingcap/kvproto/pkg/deadlock
+github.com/pingcap/kvproto/pkg/debugpb
+github.com/pingcap/kvproto/pkg/disk_usage
+github.com/pingcap/kvproto/pkg/encryptionpb
+github.com/pingcap/kvproto/pkg/eraftpb
+github.com/pingcap/kvproto/pkg/errorpb
+github.com/pingcap/kvproto/pkg/kvrpcpb
+github.com/pingcap/kvproto/pkg/metapb
+github.com/pingcap/kvproto/pkg/mpp
+github.com/pingcap/kvproto/pkg/pdpb
+github.com/pingcap/kvproto/pkg/raft_serverpb
+github.com/pingcap/kvproto/pkg/replication_modepb
+github.com/pingcap/kvproto/pkg/sharedbytes
+github.com/pingcap/kvproto/pkg/tikvpb
+github.com/pingcap/kvproto/pkg/tracepb
+# github.com/pingcap/log v1.1.0
+## explicit; go 1.16
+github.com/pingcap/log
+# github.com/pingcap/tidb v1.1.0-beta.0.20220825063022-5263a0abda61
+## explicit; go 1.18
+github.com/pingcap/tidb/config
+github.com/pingcap/tidb/errno
+github.com/pingcap/tidb/metrics
+github.com/pingcap/tidb/sessionctx/stmtctx
+github.com/pingcap/tidb/tablecodec/rowindexcodec
+github.com/pingcap/tidb/types
+github.com/pingcap/tidb/types/json
+github.com/pingcap/tidb/types/parser_driver
+github.com/pingcap/tidb/util/collate
+github.com/pingcap/tidb/util/dbterror
+github.com/pingcap/tidb/util/disk
+github.com/pingcap/tidb/util/execdetails
+github.com/pingcap/tidb/util/hack
+github.com/pingcap/tidb/util/logutil
+github.com/pingcap/tidb/util/mathutil
+github.com/pingcap/tidb/util/memory
+github.com/pingcap/tidb/util/parser
+github.com/pingcap/tidb/util/resourcegrouptag
+github.com/pingcap/tidb/util/stringutil
+github.com/pingcap/tidb/util/tikvutil
+github.com/pingcap/tidb/util/topsql/state
+github.com/pingcap/tidb/util/topsql/stmtstats
+github.com/pingcap/tidb/util/tracing
+github.com/pingcap/tidb/util/versioninfo
+# github.com/pingcap/tidb/parser v0.0.0-20220825063022-5263a0abda61
+## explicit; go 1.13
+github.com/pingcap/tidb/parser
+github.com/pingcap/tidb/parser/ast
+github.com/pingcap/tidb/parser/auth
+github.com/pingcap/tidb/parser/charset
+github.com/pingcap/tidb/parser/format
+github.com/pingcap/tidb/parser/model
+github.com/pingcap/tidb/parser/mysql
+github.com/pingcap/tidb/parser/opcode
+github.com/pingcap/tidb/parser/terror
+github.com/pingcap/tidb/parser/tidb
+github.com/pingcap/tidb/parser/types
+# github.com/pingcap/tipb v0.0.0-20220825135535-d6f1aebebabd
+## explicit; go 1.16
+github.com/pingcap/tipb/go-tipb
+github.com/pingcap/tipb/sharedbytes
+# github.com/pkg/errors v0.9.1
+## explicit
+github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+## explicit
+github.com/pmezard/go-difflib/difflib
+# github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c
+## explicit; go 1.14
+github.com/power-devops/perfstat
+# github.com/prometheus/client_golang v1.13.0
+## explicit; go 1.17
+github.com/prometheus/client_golang/prometheus
+github.com/prometheus/client_golang/prometheus/internal
+# github.com/prometheus/client_model v0.2.0
+## explicit; go 1.9
+github.com/prometheus/client_model/go
+# github.com/prometheus/common v0.37.0
+## explicit; go 1.16
+github.com/prometheus/common/expfmt
+github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
+github.com/prometheus/common/model
+# github.com/prometheus/procfs v0.8.0
+## explicit; go 1.17
+github.com/prometheus/procfs
+github.com/prometheus/procfs/internal/fs
+github.com/prometheus/procfs/internal/util
+# github.com/shirou/gopsutil/v3 v3.21.12
+## explicit; go 1.15
+github.com/shirou/gopsutil/v3/internal/common
+github.com/shirou/gopsutil/v3/mem
+# github.com/simon-engledew/seed v0.0.0 => ../../
+## explicit; go 1.19
+github.com/simon-engledew/seed
+github.com/simon-engledew/seed/consumers
+github.com/simon-engledew/seed/distribution
+github.com/simon-engledew/seed/generators
+github.com/simon-engledew/seed/inspectors
+# github.com/stretchr/testify v1.8.0
+## explicit; go 1.13
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/require
+# github.com/tikv/client-go/v2 v2.0.1
+## explicit; go 1.16
+github.com/tikv/client-go/v2/config
+github.com/tikv/client-go/v2/error
+github.com/tikv/client-go/v2/internal/logutil
+github.com/tikv/client-go/v2/kv
+github.com/tikv/client-go/v2/metrics
+github.com/tikv/client-go/v2/oracle
+github.com/tikv/client-go/v2/tikvrpc
+github.com/tikv/client-go/v2/tikvrpc/interceptor
+github.com/tikv/client-go/v2/util
+# github.com/tikv/pd v1.1.0-beta.0.20210323121136-78679e5e209d
+## explicit; go 1.13
+github.com/tikv/pd/client
+github.com/tikv/pd/pkg/errs
+github.com/tikv/pd/pkg/grpcutil
+# github.com/uber/jaeger-client-go v2.30.0+incompatible
+## explicit
+github.com/uber/jaeger-client-go
+github.com/uber/jaeger-client-go/config
+github.com/uber/jaeger-client-go/internal/baggage
+github.com/uber/jaeger-client-go/internal/baggage/remote
+github.com/uber/jaeger-client-go/internal/reporterstats
+github.com/uber/jaeger-client-go/internal/spanlog
+github.com/uber/jaeger-client-go/internal/throttler
+github.com/uber/jaeger-client-go/internal/throttler/remote
+github.com/uber/jaeger-client-go/log
+github.com/uber/jaeger-client-go/rpcmetrics
+github.com/uber/jaeger-client-go/thrift
+github.com/uber/jaeger-client-go/thrift-gen/agent
+github.com/uber/jaeger-client-go/thrift-gen/baggage
+github.com/uber/jaeger-client-go/thrift-gen/jaeger
+github.com/uber/jaeger-client-go/thrift-gen/sampling
+github.com/uber/jaeger-client-go/thrift-gen/zipkincore
+github.com/uber/jaeger-client-go/transport
+github.com/uber/jaeger-client-go/utils
+# github.com/uber/jaeger-lib v2.4.1+incompatible
+## explicit
+github.com/uber/jaeger-lib/metrics
+# github.com/yusufpapurcu/wmi v1.2.2
+## explicit; go 1.16
+github.com/yusufpapurcu/wmi
+# go.etcd.io/etcd v3.3.27+incompatible
+## explicit
+go.etcd.io/etcd/pkg/transport
+# go.uber.org/atomic v1.10.0
+## explicit; go 1.18
+go.uber.org/atomic
+# go.uber.org/multierr v1.8.0
+## explicit; go 1.14
+go.uber.org/multierr
+# go.uber.org/zap v1.23.0
+## explicit; go 1.18
+go.uber.org/zap
+go.uber.org/zap/buffer
+go.uber.org/zap/internal
+go.uber.org/zap/internal/bufferpool
+go.uber.org/zap/internal/color
+go.uber.org/zap/internal/exit
+go.uber.org/zap/internal/ztest
+go.uber.org/zap/zapcore
+go.uber.org/zap/zaptest
+# golang.org/x/exp v0.0.0-20220426173459-3bcf042a4bf5
+## explicit; go 1.18
+golang.org/x/exp/constraints
+# golang.org/x/net v0.0.0-20220907135653-1e95f45603a7
+## explicit; go 1.17
+golang.org/x/net/context
+golang.org/x/net/http/httpguts
+golang.org/x/net/http2
+golang.org/x/net/http2/hpack
+golang.org/x/net/idna
+golang.org/x/net/internal/timeseries
+golang.org/x/net/trace
+# golang.org/x/sync v0.0.0-20220907140024-f12130a52804
+## explicit
+golang.org/x/sync/errgroup
+golang.org/x/sync/singleflight
+# golang.org/x/sys v0.0.0-20220907062415-87db552b00fd
+## explicit; go 1.17
+golang.org/x/sys/internal/unsafeheader
+golang.org/x/sys/unix
+golang.org/x/sys/windows
+# golang.org/x/text v0.3.7
+## explicit; go 1.17
+golang.org/x/text/encoding
+golang.org/x/text/encoding/charmap
+golang.org/x/text/encoding/internal
+golang.org/x/text/encoding/internal/identifier
+golang.org/x/text/encoding/japanese
+golang.org/x/text/encoding/korean
+golang.org/x/text/encoding/simplifiedchinese
+golang.org/x/text/encoding/traditionalchinese
+golang.org/x/text/encoding/unicode
+golang.org/x/text/internal/utf8internal
+golang.org/x/text/runes
+golang.org/x/text/secure/bidirule
+golang.org/x/text/transform
+golang.org/x/text/unicode/bidi
+golang.org/x/text/unicode/norm
+# google.golang.org/genproto v0.0.0-20220902135211-223410557253
+## explicit; go 1.19
+google.golang.org/genproto/googleapis/rpc/status
+# google.golang.org/grpc v1.49.0
+## explicit; go 1.17
+google.golang.org/grpc
+google.golang.org/grpc/attributes
+google.golang.org/grpc/backoff
+google.golang.org/grpc/balancer
+google.golang.org/grpc/balancer/base
+google.golang.org/grpc/balancer/grpclb/state
+google.golang.org/grpc/balancer/roundrobin
+google.golang.org/grpc/binarylog/grpc_binarylog_v1
+google.golang.org/grpc/channelz
+google.golang.org/grpc/codes
+google.golang.org/grpc/connectivity
+google.golang.org/grpc/credentials
+google.golang.org/grpc/credentials/insecure
+google.golang.org/grpc/encoding
+google.golang.org/grpc/encoding/gzip
+google.golang.org/grpc/encoding/proto
+google.golang.org/grpc/grpclog
+google.golang.org/grpc/health/grpc_health_v1
+google.golang.org/grpc/internal
+google.golang.org/grpc/internal/backoff
+google.golang.org/grpc/internal/balancer/gracefulswitch
+google.golang.org/grpc/internal/balancerload
+google.golang.org/grpc/internal/binarylog
+google.golang.org/grpc/internal/buffer
+google.golang.org/grpc/internal/channelz
+google.golang.org/grpc/internal/credentials
+google.golang.org/grpc/internal/envconfig
+google.golang.org/grpc/internal/grpclog
+google.golang.org/grpc/internal/grpcrand
+google.golang.org/grpc/internal/grpcsync
+google.golang.org/grpc/internal/grpcutil
+google.golang.org/grpc/internal/metadata
+google.golang.org/grpc/internal/pretty
+google.golang.org/grpc/internal/resolver
+google.golang.org/grpc/internal/resolver/dns
+google.golang.org/grpc/internal/resolver/passthrough
+google.golang.org/grpc/internal/resolver/unix
+google.golang.org/grpc/internal/serviceconfig
+google.golang.org/grpc/internal/status
+google.golang.org/grpc/internal/syscall
+google.golang.org/grpc/internal/transport
+google.golang.org/grpc/internal/transport/networktype
+google.golang.org/grpc/keepalive
+google.golang.org/grpc/metadata
+google.golang.org/grpc/peer
+google.golang.org/grpc/resolver
+google.golang.org/grpc/serviceconfig
+google.golang.org/grpc/stats
+google.golang.org/grpc/status
+google.golang.org/grpc/tap
+# google.golang.org/protobuf v1.28.1
+## explicit; go 1.11
+google.golang.org/protobuf/encoding/protojson
+google.golang.org/protobuf/encoding/prototext
+google.golang.org/protobuf/encoding/protowire
+google.golang.org/protobuf/internal/descfmt
+google.golang.org/protobuf/internal/descopts
+google.golang.org/protobuf/internal/detrand
+google.golang.org/protobuf/internal/encoding/defval
+google.golang.org/protobuf/internal/encoding/json
+google.golang.org/protobuf/internal/encoding/messageset
+google.golang.org/protobuf/internal/encoding/tag
+google.golang.org/protobuf/internal/encoding/text
+google.golang.org/protobuf/internal/errors
+google.golang.org/protobuf/internal/filedesc
+google.golang.org/protobuf/internal/filetype
+google.golang.org/protobuf/internal/flags
+google.golang.org/protobuf/internal/genid
+google.golang.org/protobuf/internal/impl
+google.golang.org/protobuf/internal/order
+google.golang.org/protobuf/internal/pragma
+google.golang.org/protobuf/internal/set
+google.golang.org/protobuf/internal/strs
+google.golang.org/protobuf/internal/version
+google.golang.org/protobuf/proto
+google.golang.org/protobuf/reflect/protodesc
+google.golang.org/protobuf/reflect/protoreflect
+google.golang.org/protobuf/reflect/protoregistry
+google.golang.org/protobuf/runtime/protoiface
+google.golang.org/protobuf/runtime/protoimpl
+google.golang.org/protobuf/types/descriptorpb
+google.golang.org/protobuf/types/known/anypb
+google.golang.org/protobuf/types/known/durationpb
+google.golang.org/protobuf/types/known/timestamppb
+# gopkg.in/natefinch/lumberjack.v2 v2.0.0
+## explicit
+gopkg.in/natefinch/lumberjack.v2
+# gopkg.in/yaml.v3 v3.0.1
+## explicit
+gopkg.in/yaml.v3
+# github.com/simon-engledew/seed => ../../

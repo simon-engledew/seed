@@ -17,6 +17,9 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/brianvoe/gofakeit/v6 v6.18.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/coreos/etcd v3.3.27+incompatible // indirect
+	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
+	github.com/coreos/pkg v0.0.0-20220810130054-c7d1c02cb6cf // indirect
 	github.com/danjacques/gofslock v0.0.0-20220131014315-6e321f4509c8 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
@@ -43,10 +46,11 @@ require (
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.21.12 // indirect
 	github.com/tikv/client-go/v2 v2.0.1 // indirect
-	github.com/tikv/pd/client v0.0.0-20220307081149-841fa61e9710 // indirect
+	github.com/tikv/pd v1.1.0-beta.0.20210323121136-78679e5e209d // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
+	go.etcd.io/etcd v3.3.27+incompatible // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.23.0 // indirect

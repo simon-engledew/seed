@@ -9,14 +9,13 @@ import (
 	_ "github.com/pingcap/tidb/types/parser_driver"
 	"github.com/simon-engledew/seed/inspectors"
 	"io"
-	"io/ioutil"
 )
 
 func InspectMySQLSchema(r io.Reader) inspectors.Inspector {
 	p := parser.New()
 
 	return func(fn func(tableName, columnName string, column inspectors.ColumnInfo)) error {
-		dump, err := ioutil.ReadAll(r)
+		dump, err := io.ReadAll(r)
 		if err != nil {
 			return err
 		}
@@ -62,7 +61,7 @@ func InspectMySQLSchema(r io.Reader) inspectors.Inspector {
 						length, _ = mysql.GetDefaultFieldLengthAndDecimal(col.Tp.GetType())
 					}
 
-					fn(tableName, columnName, &inspectors.MySQLColumn{
+					fn(tableName, columnName, inspectors.MySQLColumn{
 						Name:       columnName,
 						IsPrimary:  isPrimary,
 						IsUnsigned: mysql.HasUnsignedFlag(col.Tp.GetFlag()),

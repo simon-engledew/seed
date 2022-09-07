@@ -32,7 +32,7 @@ func TestExample(t *testing.T) {
 	var buf bytes.Buffer
 	generator := schema.Generator(context.Background(), consumers.MySQLInsertWriter(io.MultiWriter(os.Stdout, &buf), 100))
 	// generate between 100 and 300 owners
-	generator.Insert("owners", distribution.Range(100, 200), func(g *seed.RowGenerator) {
+	generator.Insert("owners", distribution.Range(10000, 10001), func(g *seed.RowGenerator) {
 		// generate cats for 3/10 owners
 		g.Insert("cats", distribution.Ratio(0.3))
 	})
