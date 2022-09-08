@@ -17,12 +17,12 @@ func main() {
 		name VARCHAR(255),
 		PRIMARY KEY (id)
 	);
-    CREATE TABLE cats (
+    	CREATE TABLE cats (
 		id BIGINT UNSIGNED,
 		owner_id BIGINT,
 		name VARCHAR(255),
 		PRIMARY KEY (id)
-    );
+    	);
 	`))
 	if err != nil {
 		panic(err)
