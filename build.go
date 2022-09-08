@@ -3,27 +3,10 @@ package seed
 import (
 	"github.com/jinzhu/inflection"
 	"github.com/jpillora/longestcommon"
-	"github.com/simon-engledew/seed/inspectors"
 	"strings"
 )
 
-func Build(i inspectors.Inspector) (Schema, error) {
-	schema := make(map[string][]*Column)
-
-	err := i(func(tableName, columnName string, columnInfo inspectors.ColumnInfo) {
-		if _, ok := schema[tableName]; !ok {
-			schema[tableName] = make([]*Column, 0)
-		}
-		schema[tableName] = append(schema[tableName], &Column{
-			Name:      columnName,
-			Generator: columnInfo.Generator(),
-			Type:      columnInfo.Type(),
-		})
-	})
-	if err != nil {
-		return nil, err
-	}
-
+func Build(schema map[string][]Column) (Schema, error) {
 	tableNames := make([]string, 0, len(schema))
 
 	for tableName := range schema {
@@ -34,13 +17,14 @@ func Build(i inspectors.Inspector) (Schema, error) {
 
 	for _, columns := range schema {
 		for i, column := range columns {
-			if strings.HasSuffix(column.Name, "_id") {
-				tableName := prefix + inflection.Plural(column.Name[:len(column.Name)-3])
+			columnName := column.Name()
+			if strings.HasSuffix(columnName, "_id") {
+				tableName := prefix + inflection.Plural(columnName[:len(columnName)-3])
 
 				if parent, ok := schema[tableName]; ok {
 					for j, target := range parent {
-						if target.Name == "id" {
-							columns[i].Generator = Reference(tableName, j)
+						if target.Name() == "id" {
+							columns[i] = overrideColumn(columns[i], Reference(tableName, j))
 						}
 					}
 				}

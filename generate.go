@@ -73,7 +73,7 @@ func (g *RowGenerator) InsertContext(ctx context.Context, table string, dist dis
 			row := make(Row, 0, len(columns))
 
 			for _, column := range columns {
-				row = append(row, column.Generator.Value(withStack))
+				row = append(row, column.Generator().Value(withStack))
 			}
 
 			i++

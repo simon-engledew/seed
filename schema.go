@@ -7,14 +7,14 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type Column struct {
-	Name      string
-	Type      string
-	Generator generators.ValueGenerator
+type Column interface {
+	Name() string
+	Type() string
+	Generator() generators.ValueGenerator
 }
 
 // Schema maps tables to columns.
-type Schema map[string][]*Column
+type Schema map[string][]Column
 
 // Generator will emit test data to consumer.
 func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) *RowGenerator {
@@ -31,7 +31,7 @@ func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) *Row
 		names := make([]string, 0, len(columns))
 
 		for _, column := range columns {
-			names = append(names, column.Name)
+			names = append(names, column.Name())
 		}
 
 		callback(t, names, channel)
@@ -48,34 +48,53 @@ func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) *Row
 	}
 }
 
-type SchemaTransform func(t string, c *Column)
+type SchemaTransform func(t string, c Column) Column
+
+type columnOverride struct {
+	Column
+	generator generators.ValueGenerator
+}
+
+func (c columnOverride) Generator() generators.ValueGenerator {
+	return c.generator
+}
+
+func overrideColumn(c Column, g generators.ValueGenerator) Column {
+	if o, ok := c.(columnOverride); ok {
+		return columnOverride{Column: o.Column, generator: g}
+	}
+	return columnOverride{Column: c, generator: g}
+}
 
 // ReplaceColumnType will replace the generator for columns with a Type matching t.
 func ReplaceColumnType(t string, g generators.ValueGenerator) SchemaTransform {
-	return func(table string, column *Column) {
-		if column.Type == t {
-			column.Generator = g
+	return func(table string, column Column) Column {
+		if column.Type() == t {
+			return overrideColumn(column, g)
 		}
+		return column
 	}
 }
 
 // ReplaceColumns will replace columns found in any table if the name is found in the columns map.
 func ReplaceColumns(columns map[string]generators.ValueGenerator) SchemaTransform {
-	return func(table string, column *Column) {
-		if generator, ok := columns[column.Name]; ok {
-			column.Generator = generator
+	return func(table string, column Column) Column {
+		if g, ok := columns[column.Name()]; ok {
+			return overrideColumn(column, g)
 		}
+		return column
 	}
 }
 
 // Merge will replace columns if their table and column names are found in the schema map.
 func Merge(schema map[string]map[string]generators.ValueGenerator) SchemaTransform {
-	return func(table string, column *Column) {
+	return func(table string, column Column) Column {
 		if columns, ok := schema[table]; ok {
-			if generator, ok := columns[column.Name]; ok {
-				column.Generator = generator
+			if g, ok := columns[column.Name()]; ok {
+				return overrideColumn(column, g)
 			}
 		}
+		return column
 	}
 }
 
@@ -94,7 +113,7 @@ func (s Schema) Transform(transforms ...SchemaTransform) {
 func (s Schema) Reference(t string, c string) generators.ValueGenerator {
 	columns := s[t]
 	for idx, column := range columns {
-		if column.Name == c {
+		if column.Name() == c {
 			return Reference(t, idx)
 		}
 	}

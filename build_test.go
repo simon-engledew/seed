@@ -7,36 +7,45 @@ import (
 	"github.com/simon-engledew/seed/consumers"
 	"github.com/simon-engledew/seed/distribution"
 	"github.com/simon-engledew/seed/generators"
-	"github.com/simon-engledew/seed/inspectors"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 	"strconv"
 	"testing"
 )
 
+type testColumn struct {
+}
+
+func (testColumn) Name() string {
+	return "id"
+}
+
+func (testColumn) Type() string {
+	return "bigint(20)"
+}
+
+func (testColumn) Generator() generators.ValueGenerator {
+	return generators.Column("bigint", true, true, 20, generators.Identity("n/a", true))
+}
+
 func TestBuild(t *testing.T) {
-	testInspector := func(fn func(tableName, columnName string, column inspectors.ColumnInfo)) error {
-		fn("test", "id", inspectors.MySQLColumn{
-			Name:       "id",
-			DataType:   "bigint",
-			IsPrimary:  true,
-			IsUnsigned: true,
-			Length:     20,
-			ColumnType: "bigint(20)",
-		})
-		return nil
+	columns := map[string][]seed.Column{
+		"test": {
+			&testColumn{},
+		},
 	}
-	s, err := seed.Build(testInspector)
+	s, err := seed.Build(columns)
 	require.NoError(t, err)
 	s.Transform(
 		seed.ReplaceColumnType("tinyint(1)", generators.Faker(func(faker *gofakeit.Faker) (string, bool) {
 			return strconv.FormatBool(faker.Bool()), false
 		})),
 	)
-	s.Transform(func(table string, c *seed.Column) {
+	s.Transform(func(table string, c seed.Column) seed.Column {
 		require.Equal(t, "test", table)
-		require.Equal(t, "id", c.Name)
-		require.Equal(t, "bigint(20)", c.Type)
+		require.Equal(t, "id", c.Name())
+		require.Equal(t, "bigint(20)", c.Type())
+		return c
 	})
 	testConsumer := consumers.MySQLConsumer(func(ctx context.Context, g *errgroup.Group) func(t string, c []string, rows chan []string) {
 		return func(table string, c []string, rows chan []string) {
