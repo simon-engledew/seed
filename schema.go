@@ -62,8 +62,8 @@ func ReplaceColumnType(t string, g generators.ValueGenerator) SchemaTransform {
 // ReplaceColumns will replace columns found in any table if the name is found in the columns map.
 func ReplaceColumns(columns map[string]generators.ValueGenerator) SchemaTransform {
 	return func(table string, column *Column) {
-		if generator, ok := columns[column.Name]; ok {
-			column.Generator = generator
+		if g, ok := columns[column.Name]; ok {
+			column.Generator = g
 		}
 	}
 }
@@ -72,8 +72,8 @@ func ReplaceColumns(columns map[string]generators.ValueGenerator) SchemaTransfor
 func Merge(schema map[string]map[string]generators.ValueGenerator) SchemaTransform {
 	return func(table string, column *Column) {
 		if columns, ok := schema[table]; ok {
-			if generator, ok := columns[column.Name]; ok {
-				column.Generator = generator
+			if g, ok := columns[column.Name]; ok {
+				column.Generator = g
 			}
 		}
 	}

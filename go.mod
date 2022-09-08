@@ -7,6 +7,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0
 	github.com/jpillora/longestcommon v0.0.0-20161227235612-adb9d91ee629
 	github.com/stretchr/testify v1.8.0
+	golang.org/x/exp v0.0.0-20220907003533-145caa8ea1d0
 	golang.org/x/sync v0.0.0-20220907140024-f12130a52804
 )
 

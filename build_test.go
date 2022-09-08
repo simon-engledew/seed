@@ -7,7 +7,6 @@ import (
 	"github.com/simon-engledew/seed/consumers"
 	"github.com/simon-engledew/seed/distribution"
 	"github.com/simon-engledew/seed/generators"
-	"github.com/simon-engledew/seed/inspectors"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 	"strconv"
@@ -15,18 +14,8 @@ import (
 )
 
 func TestBuild(t *testing.T) {
-	testInspector := func(fn func(tableName, columnName string, column inspectors.ColumnInfo)) error {
-		fn("test", "id", inspectors.MySQLColumn{
-			Name:       "id",
-			DataType:   "bigint",
-			IsPrimary:  true,
-			IsUnsigned: true,
-			Length:     20,
-			ColumnType: "bigint(20)",
-		})
-		return nil
-	}
-	s, err := seed.Build(testInspector)
+	columns := []byte(`{"test":[{"name":"id","data_type":"bigint","is_primary":true,"is_unsigned":true,"length":20,"column_type":"bigint(20)"}]}`)
+	s, err := seed.Build(columns)
 	require.NoError(t, err)
 	s.Transform(
 		seed.ReplaceColumnType("tinyint(1)", generators.Faker(func(faker *gofakeit.Faker) (string, bool) {

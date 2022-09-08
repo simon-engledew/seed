@@ -1,0 +1,15 @@
+version: '3.6'
+services:
+  db:
+    image: mysql:8.0.30
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    expose:
+      - "3306"
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - "db-data:/var/lib/mysql"
+volumes:
+  db-data:
+    driver: local
