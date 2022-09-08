@@ -2,16 +2,17 @@ package seed_test
 
 import (
 	"context"
-	"github.com/brianvoe/gofakeit/v6"
-	"github.com/simon-engledew/seed"
-	"github.com/simon-engledew/seed/consumers"
-	"github.com/simon-engledew/seed/distribution"
-	"github.com/simon-engledew/seed/generators"
-	"github.com/simon-engledew/seed/inspectors"
-	"github.com/stretchr/testify/require"
-	"golang.org/x/sync/errgroup"
 	"strconv"
 	"testing"
+
+	"github.com/brianvoe/gofakeit/v6"
+	"github.com/shaaraddalvi/seed"
+	"github.com/shaaraddalvi/seed/consumers"
+	"github.com/shaaraddalvi/seed/distribution"
+	"github.com/shaaraddalvi/seed/generators"
+	"github.com/shaaraddalvi/seed/inspectors"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
 )
 
 func TestBuild(t *testing.T) {

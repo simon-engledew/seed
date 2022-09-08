@@ -2,7 +2,8 @@ package consumers
 
 import (
 	"context"
-	"github.com/simon-engledew/seed/generators"
+
+	"github.com/shaaraddalvi/seed/generators"
 	"golang.org/x/sync/errgroup"
 )
 

@@ -2,8 +2,9 @@ package seed
 
 import (
 	"context"
-	"github.com/simon-engledew/seed/consumers"
-	"github.com/simon-engledew/seed/generators"
+
+	"github.com/shaaraddalvi/seed/consumers"
+	"github.com/shaaraddalvi/seed/generators"
 	"golang.org/x/sync/errgroup"
 )
 

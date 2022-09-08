@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
-	"github.com/simon-engledew/seed/generators"
-	"golang.org/x/sync/errgroup"
 	"io"
 	"strings"
+
+	"github.com/shaaraddalvi/seed/generators"
+	"golang.org/x/sync/errgroup"
 )
 
 func MySQLConsumer(base rawConsumer) Consumer {

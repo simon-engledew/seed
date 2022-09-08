@@ -2,9 +2,10 @@ package generators_test
 
 import (
 	"context"
-	"github.com/simon-engledew/seed/generators"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/shaaraddalvi/seed/generators"
+	"github.com/stretchr/testify/require"
 )
 
 func TestText(t *testing.T) {

@@ -2,13 +2,14 @@ package mysql_schema
 
 import (
 	"fmt"
+	"io"
+
 	"github.com/pingcap/tidb/parser"
 	"github.com/pingcap/tidb/parser/ast"
 	"github.com/pingcap/tidb/parser/mysql"
 	"github.com/pingcap/tidb/parser/types"
 	_ "github.com/pingcap/tidb/types/parser_driver"
-	"github.com/simon-engledew/seed/inspectors"
-	"io"
+	"github.com/shaaraddalvi/seed/inspectors"
 )
 
 func InspectMySQLSchema(r io.Reader) inspectors.Inspector {

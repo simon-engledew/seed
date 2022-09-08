@@ -3,7 +3,8 @@ package seed
 import (
 	"context"
 	"fmt"
-	"github.com/simon-engledew/seed/generators"
+
+	"github.com/shaaraddalvi/seed/generators"
 )
 
 type contextKey string
