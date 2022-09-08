@@ -1,10 +1,9 @@
 package distribution_test
 
 import (
-	"testing"
-
-	"github.com/shaaraddalvi/seed/distribution"
+	"github.com/simon-engledew/seed/distribution"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestRatioZero(t *testing.T) {

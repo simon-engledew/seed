@@ -1,6 +1,6 @@
-module github.com/shaaraddalvi/seed
+module github.com/simon-engledew/seed
 
-go 1.18
+go 1.19
 
 require (
 	github.com/brianvoe/gofakeit/v6 v6.18.0

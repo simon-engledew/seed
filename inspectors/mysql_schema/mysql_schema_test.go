@@ -3,9 +3,9 @@ package mysql_schema_test
 import (
 	"bytes"
 	"context"
-	"github.com/shaaraddalvi/seed"
-	"github.com/shaaraddalvi/seed/consumers"
-	"github.com/shaaraddalvi/seed/distribution"
+	"github.com/simon-engledew/seed"
+	"github.com/simon-engledew/seed/consumers"
+	"github.com/simon-engledew/seed/distribution"
 	"github.com/stretchr/testify/require"
 	"io"
 	"mysql_schema"

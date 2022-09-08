@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"strconv"
-	"testing"
-
-	"github.com/shaaraddalvi/seed/consumers"
+	"github.com/simon-engledew/seed/consumers"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
+	"strconv"
+	"testing"
 )
 
 func TestInsertsConsumerShort(t *testing.T) {

@@ -3,11 +3,10 @@ package seed
 import (
 	"context"
 	"fmt"
-	"io"
-
-	"github.com/shaaraddalvi/seed/distribution"
-	"github.com/shaaraddalvi/seed/generators"
+	"github.com/simon-engledew/seed/distribution"
+	"github.com/simon-engledew/seed/generators"
 	"golang.org/x/sync/errgroup"
+	"io"
 )
 
 type Row []*generators.Value

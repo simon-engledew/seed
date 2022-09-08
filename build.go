@@ -1,11 +1,10 @@
 package seed
 
 import (
-	"strings"
-
 	"github.com/jinzhu/inflection"
 	"github.com/jpillora/longestcommon"
-	"github.com/shaaraddalvi/seed/inspectors"
+	"github.com/simon-engledew/seed/inspectors"
+	"strings"
 )
 
 func Build(i inspectors.Inspector) (Schema, error) {

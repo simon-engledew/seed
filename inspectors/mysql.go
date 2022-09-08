@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/brianvoe/gofakeit/v6"
-	"github.com/shaaraddalvi/seed/generators"
+	"github.com/simon-engledew/seed/generators"
 )
 
 const query = `
