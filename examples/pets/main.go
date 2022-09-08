@@ -32,7 +32,7 @@ func main() {
 		panic(err)
 	}
 	generator := schema.Generator(context.Background(), consumers.MySQLInsertWriter(os.Stdout, 100))
-	// generate between 100 and 300 owners
+	// generate between 100 and 200 owners
 	generator.Insert("owners", distribution.Range(100, 200), func(g *seed.RowGenerator) {
 		// generate cats for 3/10 owners
 		g.Insert("cats", distribution.Ratio(0.3))
