@@ -2,8 +2,10 @@ module github.com/simon-engledew/seed/inspectors/db/mysql
 
 go 1.19
 
-require github.com/simon-engledew/seed v0.0.0-00010101000000-000000000000
-
-require github.com/brianvoe/gofakeit/v6 v6.18.0 // indirect
-
-replace github.com/simon-engledew/seed => ../../../
+require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/go-sql-driver/mysql v1.6.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/stretchr/testify v1.8.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
+)

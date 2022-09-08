@@ -14,11 +14,7 @@ import (
 )
 
 func TestBuild(t *testing.T) {
-	columns := map[string][]*seed.Column{
-		"test": {
-			{Name: "id", Type: "bigint(20)", Generator: generators.Counter()},
-		},
-	}
+	columns := []byte(`{"test":[{"name":"id","data_type":"bigint","is_primary":true,"is_unsigned":true,"length":20,"column_type":"bigint(20)"}]}`)
 	s, err := seed.Build(columns)
 	require.NoError(t, err)
 	s.Transform(

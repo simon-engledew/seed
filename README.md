@@ -10,13 +10,17 @@ import (
 	"github.com/simon-engledew/seed"
 	"github.com/simon-engledew/seed/consumers"
 	"github.com/simon-engledew/seed/distribution"
-	"github.com/simon-engledew/seed/inspectors"
+	"github.com/simon-engledew/seed/inspectors/db/mysql"
 	"os"
 	"context"
 )
 
 func generate(db *sql.DB) {
-	schema, err := seed.Build(inspectors.InspectMySQLConnection(db))
+	def, err := mysql.InspectMySQLConnection(db)
+	if err != nil {
+		panic(err)
+	}
+	schema, err := seed.Build(def)
 	if err != nil {
 		panic(err)
 	}
@@ -51,7 +55,7 @@ import (
 )
 
 func main() {
-	i := mysql_schema.InspectMySQLSchema(strings.NewReader(`
+	def, err := mysql.InspectMySQLSchema(strings.NewReader(`
 	CREATE TABLE owners (
 		id BIGINT UNSIGNED,
 		name VARCHAR(255)
@@ -63,7 +67,10 @@ func main() {
 		name VARCHAR(255)
     );
 	`))
-	schema, err := seed.Build(i)
+	if err != nil {
+		panic(err)
+	}
+	schema, err := seed.Build(def)
 	if err != nil {
 		panic(err)
 	}

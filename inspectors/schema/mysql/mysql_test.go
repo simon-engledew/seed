@@ -1,15 +1,8 @@
 package mysql_test
 
 import (
-	"bytes"
-	"context"
-	"github.com/simon-engledew/seed"
-	"github.com/simon-engledew/seed/consumers"
-	"github.com/simon-engledew/seed/distribution"
 	"github.com/simon-engledew/seed/inspectors/schema/mysql"
 	"github.com/stretchr/testify/require"
-	"io"
-	"os"
 	"strings"
 	"testing"
 )
@@ -28,15 +21,5 @@ func TestExample(t *testing.T) {
     );
 	`))
 	require.NoError(t, err)
-	schema, err := seed.Build(tables)
-	require.NoError(t, err)
-	var buf bytes.Buffer
-	generator := schema.Generator(context.Background(), consumers.MySQLInsertWriter(io.MultiWriter(os.Stdout, &buf), 100))
-	// generate between 100 and 300 owners
-	generator.Insert("owners", distribution.Range(10, 20), func(g *seed.RowGenerator) {
-		// generate cats for 3/10 owners
-		g.Insert("cats", distribution.Ratio(0.3))
-	})
-	require.NoError(t, generator.Wait())
-	require.NotEmpty(t, buf.Bytes())
+	require.Equal(t, tables, []byte(`{"cats":[{"name":"id","data_type":"bigint","is_primary":false,"is_unsigned":true,"length":20,"column_type":"bigint(20)"},{"name":"owner_id","data_type":"bigint","is_primary":false,"is_unsigned":false,"length":20,"column_type":"bigint(20)"},{"name":"name","data_type":"varchar","is_primary":false,"is_unsigned":false,"length":255,"column_type":"varchar(255)"}],"owners":[{"name":"id","data_type":"bigint","is_primary":false,"is_unsigned":true,"length":20,"column_type":"bigint(20)"},{"name":"name","data_type":"varchar","is_primary":false,"is_unsigned":false,"length":255,"column_type":"varchar(255)"}]}`))
 }
