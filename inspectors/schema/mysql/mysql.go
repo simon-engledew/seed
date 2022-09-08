@@ -35,7 +35,7 @@ func toGenerator(c MySQLColumn) generators.ValueGenerator {
 	}
 	gen := generators.Column(c.DataType, c.IsUnsigned, c.Length)
 	if gen == nil {
-		return generators.Identity(c.Type, true)
+		return generators.Identity("NULL", false)
 	}
 	return gen
 }

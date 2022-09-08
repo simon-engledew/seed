@@ -1,4 +1,4 @@
-module github.com/simon-engledew/seed/schema/mysql
+module github.com/simon-engledew/seed/inspectors/schema/mysql
 
 go 1.19
 
@@ -9,7 +9,7 @@ require (
 	github.com/stretchr/testify v1.8.0
 )
 
-replace github.com/simon-engledew/seed => ../../
+replace github.com/simon-engledew/seed => ../../../
 
 require (
 	github.com/BurntSushi/toml v1.2.0 // indirect

@@ -6,7 +6,7 @@ import (
 	"github.com/simon-engledew/seed"
 	"github.com/simon-engledew/seed/consumers"
 	"github.com/simon-engledew/seed/distribution"
-	"github.com/simon-engledew/seed/schema/mysql"
+	"github.com/simon-engledew/seed/inspectors/schema/mysql"
 	"github.com/stretchr/testify/require"
 	"io"
 	"os"
