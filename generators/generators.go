@@ -70,11 +70,7 @@ func fakeInt[T int8 | int16 | int32 | int64](gen func(*gofakeit.Faker) T) ValueG
 	})
 }
 
-func Column(dataType string, isPrimary, isUnsigned bool, length int, fallback ValueGenerator) ValueGenerator {
-	if isPrimary {
-		return Counter()
-	}
-
+func Column(dataType string, isUnsigned bool, length int) ValueGenerator {
 	switch dataType {
 	case "tinyint":
 		if isUnsigned {
@@ -121,5 +117,5 @@ func Column(dataType string, isPrimary, isUnsigned bool, length int, fallback Va
 		})
 	}
 
-	return fallback
+	return nil
 }

@@ -13,25 +13,10 @@ import (
 	"testing"
 )
 
-type testColumn struct {
-}
-
-func (testColumn) Name() string {
-	return "id"
-}
-
-func (testColumn) Type() string {
-	return "bigint(20)"
-}
-
-func (testColumn) Generator() generators.ValueGenerator {
-	return generators.Column("bigint", true, true, 20, generators.Identity("n/a", true))
-}
-
 func TestBuild(t *testing.T) {
-	columns := map[string][]seed.Column{
+	columns := map[string][]*seed.Column{
 		"test": {
-			&testColumn{},
+			{Name: "id", Type: "bigint(20)", Generator: generators.Counter()},
 		},
 	}
 	s, err := seed.Build(columns)
@@ -41,11 +26,10 @@ func TestBuild(t *testing.T) {
 			return strconv.FormatBool(faker.Bool()), false
 		})),
 	)
-	s.Transform(func(table string, c seed.Column) seed.Column {
+	s.Transform(func(table string, c *seed.Column) {
 		require.Equal(t, "test", table)
-		require.Equal(t, "id", c.Name())
-		require.Equal(t, "bigint(20)", c.Type())
-		return c
+		require.Equal(t, "id", c.Name)
+		require.Equal(t, "bigint(20)", c.Type)
 	})
 	testConsumer := consumers.MySQLConsumer(func(ctx context.Context, g *errgroup.Group) func(t string, c []string, rows chan []string) {
 		return func(table string, c []string, rows chan []string) {

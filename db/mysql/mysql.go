@@ -28,46 +28,53 @@ SELECT JSON_OBJECTAGG(table_name, columns) FROM (
 ) AS pairs`
 
 type MySQLColumn struct {
-	ColumnName string `json:"name"`
+	Name       string `json:"name"`
 	DataType   string `json:"data_type"`
 	IsPrimary  bool   `json:"is_primary"`
 	IsUnsigned bool   `json:"is_unsigned"`
 	Length     int    `json:"length"`
-	ColumnType string `json:"column_type"`
+	Type       string `json:"column_type"`
 }
 
-func (c MySQLColumn) Name() string {
-	return c.ColumnName
+func toColumn(c MySQLColumn) *seed.Column {
+	return &seed.Column{
+		Name:      c.Name,
+		Type:      c.Type,
+		Generator: toGenerator(c),
+	}
 }
 
-func (c MySQLColumn) Type() string {
-	return c.ColumnType
-}
-
-func (c MySQLColumn) Generator() generators.ValueGenerator {
-	return generators.Column(c.DataType, c.IsUnsigned, c.IsPrimary, c.Length, generators.Identity(c.ColumnType, true))
+func toGenerator(c MySQLColumn) generators.ValueGenerator {
+	if c.IsPrimary {
+		return generators.Counter()
+	}
+	gen := generators.Column(c.DataType, c.IsUnsigned, c.Length)
+	if gen == nil {
+		return generators.Identity(c.Type, true)
+	}
+	return gen
 }
 
 // InspectMySQLConnection will select information from information_schema based on the current database.
-func InspectMySQLConnection(db *sql.DB) (map[string][]seed.Column, error) {
+func InspectMySQLConnection(db *sql.DB) (map[string][]*seed.Column, error) {
 	var data json.RawMessage
 
 	if err := db.QueryRow(query).Scan(&data); err != nil {
 		return nil, err
 	}
 
-	var out map[string][]*MySQLColumn
+	var out map[string][]MySQLColumn
 
 	if err := json.Unmarshal(data, &out); err != nil {
 		return nil, err
 	}
 
-	tables := make(map[string][]seed.Column)
+	tables := make(map[string][]*seed.Column)
 
 	for tableName, columns := range out {
-		tables[tableName] = make([]seed.Column, 0, len(columns))
+		tables[tableName] = make([]*seed.Column, 0, len(columns))
 		for _, column := range columns {
-			tables[tableName] = append(tables[tableName], column)
+			tables[tableName] = append(tables[tableName], toColumn(column))
 		}
 	}
 

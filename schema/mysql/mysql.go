@@ -13,27 +13,34 @@ import (
 )
 
 type MySQLColumn struct {
-	ColumnName string
+	Name       string
 	DataType   string
 	IsPrimary  bool
 	IsUnsigned bool
 	Length     int
-	ColumnType string
+	Type       string
 }
 
-func (c MySQLColumn) Name() string {
-	return c.ColumnName
+func toColumn(c MySQLColumn) *seed.Column {
+	return &seed.Column{
+		Name:      c.Name,
+		Type:      c.Type,
+		Generator: toGenerator(c),
+	}
 }
 
-func (c MySQLColumn) Type() string {
-	return c.ColumnType
+func toGenerator(c MySQLColumn) generators.ValueGenerator {
+	if c.IsPrimary {
+		return generators.Counter()
+	}
+	gen := generators.Column(c.DataType, c.IsUnsigned, c.Length)
+	if gen == nil {
+		return generators.Identity(c.Type, true)
+	}
+	return gen
 }
 
-func (c MySQLColumn) Generator() generators.ValueGenerator {
-	return generators.Column(c.DataType, c.IsUnsigned, c.IsPrimary, c.Length, generators.Identity(c.ColumnType, true))
-}
-
-func InspectMySQLSchema(r io.Reader) (map[string][]seed.Column, error) {
+func InspectMySQLSchema(r io.Reader) (map[string][]*seed.Column, error) {
 	p := parser.New()
 
 	dump, err := io.ReadAll(r)
@@ -46,13 +53,13 @@ func InspectMySQLSchema(r io.Reader) (map[string][]seed.Column, error) {
 		return nil, fmt.Errorf("failed to parse sqldump: %w", err)
 	}
 
-	schema := make(map[string][]seed.Column)
+	schema := make(map[string][]*seed.Column)
 
 	for _, statement := range statements {
 		if create, ok := statement.(*ast.CreateTableStmt); ok {
 			tableName := create.Table.Name.String()
 
-			schema[tableName] = make([]seed.Column, 0, len(create.Cols))
+			schema[tableName] = make([]*seed.Column, 0, len(create.Cols))
 
 			primaryKey := make(map[string]struct{})
 
@@ -86,14 +93,14 @@ func InspectMySQLSchema(r io.Reader) (map[string][]seed.Column, error) {
 					length, _ = mysql.GetDefaultFieldLengthAndDecimal(col.Tp.GetType())
 				}
 
-				schema[tableName] = append(schema[tableName], MySQLColumn{
-					ColumnName: columnName,
+				schema[tableName] = append(schema[tableName], toColumn(MySQLColumn{
+					Name:       columnName,
 					IsPrimary:  isPrimary,
 					IsUnsigned: mysql.HasUnsignedFlag(col.Tp.GetFlag()),
-					ColumnType: col.Tp.CompactStr(),
+					Type:       col.Tp.CompactStr(),
 					DataType:   types.TypeToStr(col.Tp.GetType(), col.Tp.GetCharset()),
 					Length:     length,
-				})
+				}))
 			}
 		}
 	}
