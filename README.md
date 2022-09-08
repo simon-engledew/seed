@@ -61,11 +61,11 @@ func main() {
 		name VARCHAR(255)
 	);
 
-    CREATE TABLE cats (
+    	CREATE TABLE cats (
 		id BIGINT UNSIGNED,
 		owner_id BIGINT,
 		name VARCHAR(255)
-    );
+	);
 	`))
 	if err != nil {
 		panic(err)
