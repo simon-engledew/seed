@@ -3,17 +3,18 @@ package inspectors
 import (
 	"database/sql"
 	"encoding/json"
-	"github.com/brianvoe/gofakeit/v6"
-	"github.com/simon-engledew/seed/generators"
 	"math"
 	"strconv"
+
+	"github.com/brianvoe/gofakeit/v6"
+	"github.com/simon-engledew/seed/generators"
 )
 
 const query = `
 SELECT JSON_OBJECTAGG(table_name, columns) FROM (
     SELECT 
         TABLE_NAME AS 'table_name',
-        JSON_ARRAYAGG(,
+        JSON_ARRAYAGG(
 			JSON_OBJECT(
 			    'name', COLUMN_NAME,
 				'data_type', DATA_TYPE,
@@ -64,22 +65,22 @@ func (c MySQLColumn) Generator() generators.ValueGenerator {
 		if c.IsUnsigned {
 			return fakeUint((*gofakeit.Faker).Uint8)
 		}
-		fakeInt((*gofakeit.Faker).Int8)
+		return fakeInt((*gofakeit.Faker).Int8)
 	case "smallint":
 		if c.IsUnsigned {
 			return fakeUint((*gofakeit.Faker).Uint16)
 		}
-		fakeInt((*gofakeit.Faker).Int16)
+		return fakeInt((*gofakeit.Faker).Int16)
 	case "int":
 		if c.IsUnsigned {
 			return fakeUint((*gofakeit.Faker).Uint32)
 		}
-		fakeInt((*gofakeit.Faker).Int32)
+		return fakeInt((*gofakeit.Faker).Int32)
 	case "bigint":
 		if c.IsUnsigned {
 			return fakeUint((*gofakeit.Faker).Uint64)
 		}
-		fakeInt((*gofakeit.Faker).Int64)
+		return fakeInt((*gofakeit.Faker).Int64)
 	case "double":
 		return generators.Faker(func(f *gofakeit.Faker) (string, bool) {
 			return strconv.FormatFloat(f.Float64Range(-100, 100), 'f', -1, 64), false
