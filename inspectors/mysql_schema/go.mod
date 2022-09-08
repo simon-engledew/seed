@@ -1,4 +1,4 @@
-module mysql_schema
+module github.com/simon-engledew/seed/inspectors/mysql_schema
 
 go 1.19
 
