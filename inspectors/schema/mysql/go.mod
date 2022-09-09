@@ -5,17 +5,13 @@ go 1.19
 require (
 	github.com/pingcap/tidb v1.1.0-beta.0.20220825063022-5263a0abda61
 	github.com/pingcap/tidb/parser v0.0.0-20220825063022-5263a0abda61
-	github.com/simon-engledew/seed v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.8.0
 )
-
-replace github.com/simon-engledew/seed => ../../../
 
 require (
 	github.com/BurntSushi/toml v1.2.0 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/brianvoe/gofakeit/v6 v6.18.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/coreos/etcd v3.3.27+incompatible // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
@@ -26,8 +22,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
-	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jpillora/longestcommon v0.0.0-20161227235612-adb9d91ee629 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/opentracing/basictracer-go v1.0.0 // indirect

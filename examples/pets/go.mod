@@ -62,5 +62,4 @@ require (
 )
 
 replace github.com/simon-engledew/seed v0.0.0 => ../../
-
 replace github.com/simon-engledew/seed/inspectors/schema/mysql v0.0.0 => ../../inspectors/schema/mysql
