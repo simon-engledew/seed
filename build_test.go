@@ -18,8 +18,8 @@ func TestBuild(t *testing.T) {
 	s, err := seed.Build(columns)
 	require.NoError(t, err)
 	s.Transform(
-		seed.ReplaceColumnType("tinyint(1)", generators.Faker(func(faker *gofakeit.Faker) (string, bool) {
-			return strconv.FormatBool(faker.Bool()), false
+		seed.ReplaceColumnType("tinyint(1)", generators.Faker[generators.Unquoted](func(faker *gofakeit.Faker) string {
+			return strconv.FormatBool(faker.Bool())
 		})),
 	)
 	s.Transform(func(table string, c *seed.Column) {

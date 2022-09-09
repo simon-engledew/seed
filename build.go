@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/jinzhu/inflection"
 	"github.com/jpillora/longestcommon"
+	"github.com/simon-engledew/seed/consumers"
 	"github.com/simon-engledew/seed/generators"
 	"golang.org/x/exp/maps"
 	"strings"
@@ -18,14 +19,14 @@ type ColumnDefinition struct {
 	Type       string `json:"column_type"`
 }
 
-func (c ColumnDefinition) Generator() generators.ValueGenerator {
+func (c ColumnDefinition) Generator() consumers.ValueGenerator {
 	if c.IsPrimary {
 		return generators.Counter()
 	}
 	if gen := generators.Column(c.DataType, c.IsUnsigned, c.Length); gen != nil {
 		return gen
 	}
-	return generators.Identity("NULL", false)
+	return generators.Identity[generators.Unquoted]("NULL")
 }
 
 func Build(data []byte) (Schema, error) {

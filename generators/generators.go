@@ -2,39 +2,48 @@ package generators
 
 import (
 	"context"
+	"fmt"
 	"github.com/brianvoe/gofakeit/v6"
+	"github.com/simon-engledew/seed/consumers"
 	"math"
 	"strconv"
 	"sync"
 )
 
-type Value struct {
-	Value string
-	Quote bool
+type Unquoted string
+
+type Quoted string
+
+func (v Unquoted) String() string {
+	return string(v)
 }
 
-func NewValue(v string, q bool) *Value {
-	return &Value{Value: v, Quote: q}
+func (v Unquoted) Escape() bool {
+	return false
 }
 
-type ValueGenerator interface {
-	Value(ctx context.Context) *Value
+func (v Quoted) String() string {
+	return string(v)
 }
 
-func Counter() ValueGenerator {
+func (v Quoted) Escape() bool {
+	return true
+}
+
+func Counter() consumers.ValueGenerator {
 	c := uint64(0)
-	return Locked(func() *Value {
+	return Locked(func(_ context.Context) consumers.Value {
 		c += 1
-		return NewValue(strconv.FormatUint(c, 10), false)
+		return Unquoted(strconv.FormatUint(c, 10))
 	})
 }
 
-func Locked(fn func() *Value) ValueGenerator {
+func Locked(fn func(ctx context.Context) consumers.Value) consumers.ValueGenerator {
 	var m sync.Mutex
-	return Func(func(ctx context.Context) *Value {
+	return Func(func(ctx context.Context) consumers.Value {
 		m.Lock()
 		defer m.Unlock()
-		return fn()
+		return fn(ctx)
 	})
 }
 
@@ -44,33 +53,38 @@ var fakers = sync.Pool{
 	},
 }
 
-func Faker(fn func(*gofakeit.Faker) (string, bool)) ValueGenerator {
-	return Func(func(ctx context.Context) *Value {
+type value interface {
+	consumers.Value
+	Quoted | Unquoted
+}
+
+func Faker[T value](fn func(*gofakeit.Faker) string) consumers.ValueGenerator {
+	return Func(func(ctx context.Context) consumers.Value {
 		f := fakers.Get().(*gofakeit.Faker)
 		defer fakers.Put(f)
-		return NewValue(fn(f))
+		return T(fn(f))
 	})
 }
 
-func Format(fmt string) ValueGenerator {
-	return Faker(func(f *gofakeit.Faker) (string, bool) {
-		return f.Generate(fmt), true
+func Format[T value](fmt string) consumers.ValueGenerator {
+	return Faker[T](func(f *gofakeit.Faker) string {
+		return f.Generate(fmt)
 	})
 }
 
-func fakeUint[T uint8 | uint16 | uint32 | uint64](gen func(*gofakeit.Faker) T) ValueGenerator {
-	return Faker(func(f *gofakeit.Faker) (string, bool) {
-		return strconv.FormatUint(uint64(gen(f)), 10), false
+func fakeUint[T uint8 | uint16 | uint32 | uint64](gen func(*gofakeit.Faker) T) consumers.ValueGenerator {
+	return Faker[Unquoted](func(f *gofakeit.Faker) string {
+		return strconv.FormatUint(uint64(gen(f)), 10)
 	})
 }
 
-func fakeInt[T int8 | int16 | int32 | int64](gen func(*gofakeit.Faker) T) ValueGenerator {
-	return Faker(func(f *gofakeit.Faker) (string, bool) {
-		return strconv.FormatInt(int64(gen(f)), 10), false
+func fakeInt[T int8 | int16 | int32 | int64](gen func(*gofakeit.Faker) T) consumers.ValueGenerator {
+	return Faker[Unquoted](func(f *gofakeit.Faker) string {
+		return strconv.FormatInt(int64(gen(f)), 10)
 	})
 }
 
-func Column(dataType string, isUnsigned bool, length int) ValueGenerator {
+func Column(dataType string, isUnsigned bool, length int) consumers.ValueGenerator {
 	switch dataType {
 	case "tinyint":
 		if isUnsigned {
@@ -93,29 +107,43 @@ func Column(dataType string, isUnsigned bool, length int) ValueGenerator {
 		}
 		return fakeInt((*gofakeit.Faker).Int64)
 	case "double":
-		return Faker(func(f *gofakeit.Faker) (string, bool) {
-			return strconv.FormatFloat(f.Float64Range(-100, 100), 'f', -1, 64), false
+		return Faker[Unquoted](func(f *gofakeit.Faker) string {
+			return strconv.FormatFloat(f.Float64Range(-100, 100), 'f', -1, 64)
 		})
 	case "datetime":
-		return Faker(func(f *gofakeit.Faker) (string, bool) {
-			return f.Date().Format("'2006-01-02 15:04:05'"), false
+		return Faker[Unquoted](func(f *gofakeit.Faker) string {
+			return f.Date().Format("'2006-01-02 15:04:05'")
 		})
 	case "varchar", "varbinary":
-		return Faker(func(f *gofakeit.Faker) (string, bool) {
+		return Faker[Quoted](func(f *gofakeit.Faker) string {
 			n := uint(math.Floor(math.Pow(f.Rand.Float64(), 4) * (1 + float64(length))))
-			return f.LetterN(n), true
+			return f.LetterN(n)
 		})
 	case "binary":
-		return Faker(func(f *gofakeit.Faker) (string, bool) {
-			return f.LetterN(uint(length)), true
+		return Faker[Quoted](func(f *gofakeit.Faker) string {
+			return f.LetterN(uint(length))
 		})
 	case "json":
-		return Identity("'{}'", false)
+		return Identity[Unquoted]("'{}'")
 	case "mediumtext", "text":
-		return Faker(func(f *gofakeit.Faker) (string, bool) {
-			return f.HackerPhrase(), true
+		return Faker[Quoted](func(f *gofakeit.Faker) string {
+			return f.HackerPhrase()
 		})
 	}
 
 	return nil
+}
+
+func Unique(generator consumers.ValueGenerator) consumers.ValueGenerator {
+	seen := make(map[string]struct{})
+	return Locked(func(ctx context.Context) consumers.Value {
+		for {
+			v := generator.Value(ctx)
+			key := fmt.Sprintf("%v:%s", v.Escape(), v.String())
+			if _, ok := seen[key]; !ok {
+				seen[key] = struct{}{}
+				return v
+			}
+		}
+	})
 }

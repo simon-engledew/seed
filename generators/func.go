@@ -1,17 +1,20 @@
 package generators
 
-import "context"
+import (
+	"context"
+	"github.com/simon-engledew/seed/consumers"
+)
 
 type funcGenerator struct {
-	value func(ctx context.Context) *Value
+	valueFunc func(ctx context.Context) consumers.Value
 }
 
-func (c *funcGenerator) Value(ctx context.Context) *Value {
-	return c.value(ctx)
+func (c *funcGenerator) Value(ctx context.Context) consumers.Value {
+	return c.valueFunc(ctx)
 }
 
-func Func(fn func(ctx context.Context) *Value) ValueGenerator {
+func Func(fn func(ctx context.Context) consumers.Value) *funcGenerator {
 	return &funcGenerator{
-		value: fn,
+		valueFunc: fn,
 	}
 }

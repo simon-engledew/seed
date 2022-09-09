@@ -4,16 +4,15 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
-	"github.com/simon-engledew/seed/generators"
 	"golang.org/x/sync/errgroup"
 	"io"
 	"strings"
 )
 
 func MySQLConsumer(base rawConsumer) Consumer {
-	return func(ctx context.Context, wg *errgroup.Group) func(t string, c []string, rows chan []*generators.Value) {
+	return func(ctx context.Context, wg *errgroup.Group) func(t string, c []string, rows chan []Value) {
 		fn := base(ctx, wg)
-		return func(tableName string, cols []string, rows chan []*generators.Value) {
+		return func(tableName string, cols []string, rows chan []Value) {
 			quotedCols := make([]string, len(cols))
 			for n, col := range cols {
 				quotedCols[n] = QuoteIdentifier(col)
@@ -35,19 +34,19 @@ func MySQLConsumer(base rawConsumer) Consumer {
 	}
 }
 
+func Quote(val Value) string {
+	if val.Escape() {
+		return quote(val.String())
+	}
+	return val.String()
+}
+
 func MySQLInsertWriter(w io.Writer, batchSize int) Consumer {
 	return MySQLConsumer(InsertWriter(w, batchSize))
 }
 
 func MySQLInsertDB(db *sql.DB, batchSize int) Consumer {
 	return MySQLConsumer(InsertDB(db, batchSize))
-}
-
-func Quote(val *generators.Value) string {
-	if val.Quote {
-		return quote(val.Value)
-	}
-	return val.Value
 }
 
 func quote(str string) string {

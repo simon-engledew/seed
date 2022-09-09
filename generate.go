@@ -3,21 +3,21 @@ package seed
 import (
 	"context"
 	"fmt"
+	"github.com/simon-engledew/seed/consumers"
 	"github.com/simon-engledew/seed/distribution"
-	"github.com/simon-engledew/seed/generators"
 	"golang.org/x/sync/errgroup"
 	"io"
 )
 
-type Row []*generators.Value
+type Row []consumers.Value
 type Rows map[string]Row
 
 type RowGenerator struct {
 	producers *errgroup.Group
 	consumers *errgroup.Group
 	ctx       context.Context
-	callback  func(t string, c []string, rows chan []*generators.Value)
-	channels  map[string]chan []*generators.Value
+	callback  func(t string, c []string, rows chan []consumers.Value)
+	channels  map[string]chan []consumers.Value
 	w         io.Writer
 	schema    Schema
 	stack     Rows

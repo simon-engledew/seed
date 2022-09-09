@@ -3,7 +3,7 @@ package seed
 import (
 	"context"
 	"fmt"
-	"github.com/simon-engledew/seed/generators"
+	"github.com/simon-engledew/seed/consumers"
 )
 
 type contextKey string
@@ -20,7 +20,7 @@ type dependentColumn struct {
 	columnIndex int
 }
 
-func (c *dependentColumn) Value(ctx context.Context) *generators.Value {
+func (c *dependentColumn) Value(ctx context.Context) consumers.Value {
 	parent := ctx.Value(parentKey).(Rows)
 	row, ok := parent[c.tableName]
 	if !ok {
@@ -29,7 +29,7 @@ func (c *dependentColumn) Value(ctx context.Context) *generators.Value {
 	return row[c.columnIndex]
 }
 
-func Reference(tableName string, columnIndex int) generators.ValueGenerator {
+func Reference(tableName string, columnIndex int) consumers.ValueGenerator {
 	return &dependentColumn{
 		tableName:   tableName,
 		columnIndex: columnIndex,
