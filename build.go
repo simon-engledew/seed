@@ -60,7 +60,7 @@ func Build(data []byte) (Schema, error) {
 				if parent, ok := tables[tableName]; ok {
 					for j, target := range parent {
 						if target.Name == "id" {
-							columns[i].Generator = Reference(tableName, j)
+							columns[i].Generator = generators.Reference(tableName, j)
 						}
 					}
 				}

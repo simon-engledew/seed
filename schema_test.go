@@ -21,3 +21,18 @@ func TestUnique(t *testing.T) {
 	generator.Insert("test", distribution.Fixed(10))
 	require.NoError(t, generator.Wait())
 }
+
+func TestLazy(t *testing.T) {
+	fn := func(row consumers.Row) consumers.Value {
+		return row[0]
+	}
+
+	schema := make(seed.Schema)
+	schema["test"] = []*seed.Column{
+		{Name: "a", Type: "bigint", Generator: generators.Format[generators.Unquoted]("{number:1,}")},
+		{Name: "b", Type: "bigint", Generator: generators.Lazy(fn)},
+	}
+	generator := schema.Generator(context.Background(), consumers.MySQLInsertWriter(os.Stdout, 100))
+	generator.Insert("test", distribution.Fixed(10))
+	require.NoError(t, generator.Wait())
+}

@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"github.com/simon-engledew/seed/consumers"
 	"github.com/simon-engledew/seed/distribution"
+	"github.com/simon-engledew/seed/generators"
 	"golang.org/x/sync/errgroup"
 	"io"
 )
-
-type Row []consumers.Value
-type Rows map[string]Row
 
 type RowGenerator struct {
 	producers *errgroup.Group
@@ -20,11 +18,11 @@ type RowGenerator struct {
 	channels  map[string]chan []consumers.Value
 	w         io.Writer
 	schema    Schema
-	stack     Rows
+	stack     consumers.Rows
 }
 
-func merge(a Rows, b Rows) Rows {
-	copied := make(Rows, len(a)+len(b))
+func merge(a consumers.Rows, b consumers.Rows) consumers.Rows {
+	copied := make(consumers.Rows, len(a)+len(b))
 	for k, v := range a {
 		copied[k] = v
 	}
@@ -44,11 +42,13 @@ func mergeErr(a, b error) error {
 	return b
 }
 
-func (g *RowGenerator) Generate(ctx context.Context, columns []*Column) Row {
-	row := make(Row, 0, len(columns))
+func (g *RowGenerator) Generate(ctx context.Context, columns []*Column) consumers.Row {
+	row := make(consumers.Row, 0, len(columns))
+
+	withRow := generators.WithSiblings(ctx, &row)
 
 	for _, column := range columns {
-		row = append(row, column.Generator.Value(ctx))
+		row = append(row, column.Generator.Value(withRow))
 	}
 
 	return row
@@ -75,14 +75,14 @@ func (g *RowGenerator) InsertContext(ctx context.Context, table string, dist dis
 
 		channel := g.channels[table]
 
-		withStack := WithParents(ctx, g.stack)
+		withStack := generators.WithParents(ctx, g.stack)
 
 		for dist() {
 			row := g.Generate(withStack, columns)
 
 			channel <- row
 
-			stack := merge(g.stack, Rows{table: row})
+			stack := merge(g.stack, consumers.Rows{table: row})
 
 			for _, fn := range next {
 				fn(&RowGenerator{

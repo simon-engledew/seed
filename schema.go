@@ -3,6 +3,7 @@ package seed
 import (
 	"context"
 	"github.com/simon-engledew/seed/consumers"
+	"github.com/simon-engledew/seed/generators"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -43,7 +44,7 @@ func (s Schema) Generator(ctx context.Context, consumer consumers.Consumer) *Row
 		callback:  callback,
 		channels:  channels,
 		schema:    s,
-		stack:     make(Rows),
+		stack:     make(consumers.Rows),
 	}
 }
 
@@ -94,7 +95,7 @@ func (s Schema) Reference(t string, c string) consumers.ValueGenerator {
 	columns := s[t]
 	for idx, column := range columns {
 		if column.Name == c {
-			return Reference(t, idx)
+			return generators.Reference(t, idx)
 		}
 	}
 
