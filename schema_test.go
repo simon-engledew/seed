@@ -11,10 +11,7 @@ import (
 	"testing"
 )
 
-type UniqueGenerator struct {
-}
-
-func TestReference(t *testing.T) {
+func TestUnique(t *testing.T) {
 	schema := make(seed.Schema)
 	schema["test"] = []*seed.Column{
 		{Name: "a", Type: "bigint", Generator: generators.Unique(generators.Format[generators.Unquoted]("{number:1,}"))},

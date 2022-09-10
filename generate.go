@@ -44,6 +44,16 @@ func mergeErr(a, b error) error {
 	return b
 }
 
+func (g *RowGenerator) Generate(ctx context.Context, columns []*Column) Row {
+	row := make(Row, 0, len(columns))
+
+	for _, column := range columns {
+		row = append(row, column.Generator.Value(ctx))
+	}
+
+	return row
+}
+
 func (g *RowGenerator) Wait() error {
 	err := g.producers.Wait()
 	for _, channel := range g.channels {
@@ -67,16 +77,8 @@ func (g *RowGenerator) InsertContext(ctx context.Context, table string, dist dis
 
 		withStack := WithParents(ctx, g.stack)
 
-		i := 0
-
 		for dist() {
-			row := make(Row, 0, len(columns))
-
-			for _, column := range columns {
-				row = append(row, column.Generator.Value(withStack))
-			}
-
-			i++
+			row := g.Generate(withStack, columns)
 
 			channel <- row
 
