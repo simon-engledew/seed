@@ -7,26 +7,39 @@ import (
 )
 
 var rowKey contextKey = "row"
+var columnsKey contextKey = "columns"
 
 // WithSiblings stores sibling columns in the context for use in lazy generators.
 func WithSiblings(ctx context.Context, row *consumers.Row) context.Context {
 	return context.WithValue(ctx, rowKey, row)
 }
 
+func WithColumns(ctx context.Context, columns []string) context.Context {
+	return context.WithValue(ctx, columnsKey, columns)
+}
+
 type lazyGenerator struct {
-	fn func(row consumers.Row) consumers.Value
+	fn func(map[string]consumers.Value) consumers.Value
 }
 
 type lazyValue struct {
 	parent *lazyGenerator
 	value  consumers.Value
-	row    *consumers.Row
+	ctx    context.Context
 	once   sync.Once
 }
 
 func (v *lazyValue) Value() consumers.Value {
 	v.once.Do(func() {
-		v.value = v.parent.fn(*v.row)
+		row := *v.ctx.Value(rowKey).(*consumers.Row)
+		columns := v.ctx.Value(columnsKey).([]string)
+
+		mapped := make(map[string]consumers.Value, len(columns))
+		for n, column := range columns {
+			mapped[column] = row[n]
+		}
+
+		v.value = v.parent.fn(mapped)
 	})
 	return v.value
 }
@@ -42,11 +55,11 @@ func (v *lazyValue) Escape() bool {
 func (g *lazyGenerator) Value(ctx context.Context) consumers.Value {
 	return &lazyValue{
 		parent: g,
-		row:    ctx.Value(rowKey).(*consumers.Row),
+		ctx:    ctx,
 	}
 }
 
-func Lazy(fn func(row consumers.Row) consumers.Value) consumers.ValueGenerator {
+func Lazy(fn func(row map[string]consumers.Value) consumers.Value) consumers.ValueGenerator {
 	return &lazyGenerator{
 		fn: fn,
 	}

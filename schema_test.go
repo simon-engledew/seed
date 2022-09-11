@@ -23,13 +23,13 @@ func TestUnique(t *testing.T) {
 }
 
 func TestLazy(t *testing.T) {
-	fn := func(row consumers.Row) consumers.Value {
-		return row[0]
+	fn := func(row map[string]consumers.Value) consumers.Value {
+		return row["a"].(generators.UnsignedInt) + 2
 	}
 
 	schema := make(seed.Schema)
 	schema["test"] = []*seed.Column{
-		{Name: "a", Type: "bigint", Generator: generators.Format[generators.Unquoted]("{number:1,}")},
+		{Name: "a", Type: "bigint", Generator: generators.Column("bigint", true, 20)},
 		{Name: "b", Type: "bigint", Generator: generators.Lazy(fn)},
 	}
 	generator := schema.Generator(context.Background(), consumers.MySQLInsertWriter(os.Stdout, 100))

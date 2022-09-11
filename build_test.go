@@ -9,7 +9,6 @@ import (
 	"github.com/simon-engledew/seed/generators"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
-	"strconv"
 	"testing"
 )
 
@@ -18,8 +17,8 @@ func TestBuild(t *testing.T) {
 	s, err := seed.Build(columns)
 	require.NoError(t, err)
 	s.Transform(
-		seed.ReplaceColumnType("tinyint(1)", generators.Faker[generators.Unquoted](func(faker *gofakeit.Faker) string {
-			return strconv.FormatBool(faker.Bool())
+		seed.ReplaceColumnType("tinyint(1)", generators.Faker(func(faker *gofakeit.Faker) consumers.Value {
+			return generators.Bool(faker.Bool())
 		})),
 	)
 	s.Transform(func(table string, c *seed.Column) {

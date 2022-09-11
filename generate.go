@@ -75,10 +75,15 @@ func (g *RowGenerator) InsertContext(ctx context.Context, table string, dist dis
 
 		channel := g.channels[table]
 
-		withStack := generators.WithParents(ctx, g.stack)
+		columnNames := make([]string, 0, len(columns))
+		for _, column := range columns {
+			columnNames = append(columnNames, column.Name)
+		}
+
+		generateCtx := generators.WithColumns(generators.WithParents(ctx, g.stack), columnNames)
 
 		for dist() {
-			row := g.Generate(withStack, columns)
+			row := g.Generate(generateCtx, columns)
 
 			channel <- row
 
