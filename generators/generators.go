@@ -11,11 +11,6 @@ import (
 	"time"
 )
 
-type String interface {
-	consumers.Value
-	Quoted | Unquoted
-}
-
 type Unquoted string
 
 type Quoted string
@@ -40,7 +35,7 @@ func Counter() consumers.ValueGenerator {
 	c := uint64(0)
 	return Locked(func(_ context.Context) consumers.Value {
 		c += 1
-		return Unquoted(strconv.FormatUint(c, 10))
+		return UnsignedInt(c)
 	})
 }
 
@@ -67,7 +62,10 @@ func Faker(fn func(*gofakeit.Faker) consumers.Value) consumers.ValueGenerator {
 	})
 }
 
-func Format[T String](fmt string) consumers.ValueGenerator {
+func Format[T interface {
+	consumers.Value
+	Quoted | Unquoted
+}](fmt string) consumers.ValueGenerator {
 	return Faker(func(f *gofakeit.Faker) consumers.Value {
 		return T(f.Generate(fmt))
 	})
@@ -179,7 +177,7 @@ func Column(dataType string, isUnsigned bool, length int) consumers.ValueGenerat
 			return Quoted(f.LetterN(uint(length)))
 		})
 	case "json":
-		return Identity[Unquoted]("'{}'")
+		return Identity(Unquoted("'{}'"))
 	case "mediumtext", "text":
 		return Faker(func(f *gofakeit.Faker) consumers.Value {
 			return Quoted(f.HackerPhrase())

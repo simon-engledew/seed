@@ -26,7 +26,7 @@ func (c ColumnDefinition) Generator() consumers.ValueGenerator {
 	if gen := generators.Column(c.DataType, c.IsUnsigned, c.Length); gen != nil {
 		return gen
 	}
-	return generators.Identity[generators.Unquoted]("NULL")
+	return generators.Identity(generators.Unquoted("NULL"))
 }
 
 func Build(data []byte) (Schema, error) {

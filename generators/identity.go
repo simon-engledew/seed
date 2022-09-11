@@ -18,8 +18,8 @@ func (c *identityGenerator) Value(ctx context.Context) consumers.Value {
 	return c.value
 }
 
-func Identity[T String](v string) consumers.ValueGenerator {
+func Identity(v consumers.Value) consumers.ValueGenerator {
 	return &identityGenerator{
-		value: T(v),
+		value: v,
 	}
 }
