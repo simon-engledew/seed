@@ -23,7 +23,7 @@ func TestUnique(t *testing.T) {
 }
 
 func TestLazy(t *testing.T) {
-	fn := func(row map[string]consumers.Value) consumers.Value {
+	fn := func(_ context.Context, row map[string]consumers.Value) consumers.Value {
 		return row["a"].(generators.UnsignedInt) + 2
 	}
 

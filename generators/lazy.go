@@ -19,7 +19,7 @@ func WithColumns(ctx context.Context, columns []string) context.Context {
 }
 
 type lazyGenerator struct {
-	fn func(map[string]consumers.Value) consumers.Value
+	fn func(context.Context, map[string]consumers.Value) consumers.Value
 }
 
 type lazyValue struct {
@@ -39,7 +39,7 @@ func (v *lazyValue) Value() consumers.Value {
 			mapped[column] = row[n]
 		}
 
-		v.value = v.parent.fn(mapped)
+		v.value = v.parent.fn(v.ctx, mapped)
 	})
 	return v.value
 }
@@ -59,7 +59,7 @@ func (g *lazyGenerator) Value(ctx context.Context) consumers.Value {
 	}
 }
 
-func Lazy(fn func(row map[string]consumers.Value) consumers.Value) consumers.ValueGenerator {
+func Lazy(fn func(ctx context.Context, row map[string]consumers.Value) consumers.Value) consumers.ValueGenerator {
 	return &lazyGenerator{
 		fn: fn,
 	}
