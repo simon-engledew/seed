@@ -2,7 +2,6 @@ package generators
 
 import (
 	"context"
-	"fmt"
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/simon-engledew/seed/consumers"
 	"math"
@@ -33,18 +32,18 @@ func (v Quoted) Escape() bool {
 
 func Counter() consumers.ValueGenerator {
 	c := uint64(0)
-	return Locked(func(_ context.Context) consumers.Value {
+	return Locked(Func(func(_ context.Context) consumers.Value {
 		c += 1
 		return UnsignedInt(c)
-	})
+	}))
 }
 
-func Locked(fn func(ctx context.Context) consumers.Value) consumers.ValueGenerator {
+func Locked(gen consumers.ValueGenerator) consumers.ValueGenerator {
 	var m sync.Mutex
 	return Func(func(ctx context.Context) consumers.Value {
 		m.Lock()
 		defer m.Unlock()
-		return fn(ctx)
+		return gen.Value(ctx)
 	})
 }
 
@@ -185,18 +184,4 @@ func Column(dataType string, isUnsigned bool, length int) consumers.ValueGenerat
 	}
 
 	return nil
-}
-
-func Unique(generator consumers.ValueGenerator) consumers.ValueGenerator {
-	seen := make(map[string]struct{})
-	return Locked(func(ctx context.Context) consumers.Value {
-		for {
-			v := generator.Value(ctx)
-			key := fmt.Sprintf("%v:%s", v.Escape(), v.String())
-			if _, ok := seen[key]; !ok {
-				seen[key] = struct{}{}
-				return v
-			}
-		}
-	})
 }
