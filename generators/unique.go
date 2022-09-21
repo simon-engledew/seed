@@ -30,9 +30,10 @@ func Unique(generator consumers.ValueGenerator, columns ...string) consumers.Val
 
 	return Locked(fn(func(ctx context.Context, row map[string]consumers.Value) consumers.Value {
 		buf := buffers.Get().(*bytes.Buffer)
-		buf.Reset()
 		defer buffers.Put(buf)
 		for {
+			buf.Reset()
+
 			v := generator.Value(ctx)
 
 			_, _ = fmt.Fprintf(buf, "%t:%q", v.Escape(), v.String())
