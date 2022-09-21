@@ -6,13 +6,13 @@ Example:
 package main
 
 import (
+	"context"
 	"database/sql"
 	"github.com/simon-engledew/seed"
 	"github.com/simon-engledew/seed/consumers"
 	"github.com/simon-engledew/seed/distribution"
 	"github.com/simon-engledew/seed/inspectors/db/mysql"
 	"os"
-	"context"
 )
 
 func generate(db *sql.DB) {
@@ -37,20 +37,18 @@ func generate(db *sql.DB) {
 ```
 
 There is also an inspector that can parse mysql schema files and generate data without a database connection.
+
 ```go
 package main
 
-
 import (
-	"strings"
-	"database/sql"
+	"context"
 	"github.com/simon-engledew/seed"
 	"github.com/simon-engledew/seed/consumers"
 	"github.com/simon-engledew/seed/distribution"
-	"github.com/simon-engledew/seed/inspectors"
 	"github.com/simon-engledew/seed/inspectors/schema/mysql"
 	"os"
-	"context"
+	"strings"
 )
 
 func main() {
