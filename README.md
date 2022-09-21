@@ -36,8 +36,7 @@ func generate(db *sql.DB) {
 }
 ```
 
-There is also an inspector (`github.com/simon-engledew/seed/inspectors/mysql_schema`) that can parse mysql schema files and generate
-data without a database connection.
+There is also an inspector that can parse mysql schema files and generate data without a database connection.
 ```go
 package main
 
