@@ -49,7 +49,7 @@ import (
 	"github.com/simon-engledew/seed/consumers"
 	"github.com/simon-engledew/seed/distribution"
 	"github.com/simon-engledew/seed/inspectors"
-	"github.com/simon-engledew/seed/inspectors/mysql_schema"
+	"github.com/simon-engledew/seed/inspectors/schema/mysql"
 	"os"
 	"context"
 )
