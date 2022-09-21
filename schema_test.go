@@ -14,7 +14,7 @@ import (
 func TestUnique(t *testing.T) {
 	schema := make(seed.Schema)
 	schema["test"] = []*seed.Column{
-		{Name: "a", Type: "bigint", Generator: generators.UniqueRow(generators.Format[generators.Unquoted]("{number:1,}"), "b")},
+		{Name: "a", Type: "bigint", Generator: generators.Unique(generators.Format[generators.Unquoted]("{number:1,}"), "b")},
 		{Name: "b", Type: "bigint", Generator: generators.Unique(generators.Format[generators.Unquoted]("{number:1,}"))},
 	}
 	generator := schema.Generator(context.Background(), consumers.MySQLInsertWriter(os.Stdout, 100))

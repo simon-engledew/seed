@@ -1,39 +1,45 @@
 package generators
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/simon-engledew/seed/consumers"
-	"strings"
+	"sync"
 )
 
-func Unique(generator consumers.ValueGenerator) consumers.ValueGenerator {
-	seen := make(map[string]struct{})
-	return Locked(Func(func(ctx context.Context) consumers.Value {
-		for {
-			v := generator.Value(ctx)
-			key := fmt.Sprintf("%t:%q", v.Escape(), v.String())
-			if _, ok := seen[key]; !ok {
-				seen[key] = struct{}{}
-				return v
-			}
-		}
-	}))
+func notLazy(fn func(ctx context.Context, row map[string]consumers.Value) consumers.Value) consumers.ValueGenerator {
+	return Func(func(ctx context.Context) consumers.Value {
+		return fn(ctx, nil)
+	})
 }
 
-func UniqueRow(generator consumers.ValueGenerator, columns ...string) consumers.ValueGenerator {
+var buffers = sync.Pool{
+	New: func() any {
+		return new(bytes.Buffer)
+	},
+}
+
+func Unique(generator consumers.ValueGenerator, columns ...string) consumers.ValueGenerator {
 	seen := make(map[string]struct{})
-	return Locked(Lazy(func(ctx context.Context, row map[string]consumers.Value) consumers.Value {
+
+	fn := Lazy
+	if len(columns) == 0 {
+		fn = notLazy
+	}
+
+	return Locked(fn(func(ctx context.Context, row map[string]consumers.Value) consumers.Value {
+		buf := buffers.Get().(*bytes.Buffer)
+		buf.Reset()
+		defer buffers.Put(buf)
 		for {
 			v := generator.Value(ctx)
 
-			var buf strings.Builder
-
-			_, _ = fmt.Fprintf(&buf, "%t:%q", v.Escape(), v.String())
+			_, _ = fmt.Fprintf(buf, "%t:%q", v.Escape(), v.String())
 
 			for _, column := range columns {
 				c := row[column]
-				_, _ = fmt.Fprintf(&buf, ",%t:%q", c.Escape(), c.String())
+				_, _ = fmt.Fprintf(buf, ",%t:%q", c.Escape(), c.String())
 			}
 
 			key := buf.String()
