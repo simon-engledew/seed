@@ -8,6 +8,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/simon-engledew/seed"
 	"github.com/simon-engledew/seed/consumers"
 	"github.com/simon-engledew/seed/distribution"
@@ -15,7 +16,12 @@ import (
 	"os"
 )
 
-func generate(db *sql.DB) {
+func main() {
+	db, err := sql.Open("mysql", os.Args[1])
+	if err != nil {
+		panic(err)
+	}
+
 	def, err := mysql.InspectMySQLConnection(db)
 	if err != nil {
 		panic(err)
