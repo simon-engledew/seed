@@ -5,6 +5,7 @@ import (
 	"github.com/simon-engledew/seed"
 	"github.com/simon-engledew/seed/consumers"
 	"github.com/simon-engledew/seed/distribution"
+	"github.com/simon-engledew/seed/generators"
 	"github.com/simon-engledew/seed/inspectors/schema/mysql"
 	"os"
 	"strings"
@@ -19,6 +20,7 @@ func main() {
 	);
     	CREATE TABLE cats (
 		id BIGINT UNSIGNED,
+		name VARCHAR(255),
 		owner_id BIGINT,
 		name VARCHAR(255),
 		PRIMARY KEY (id)
@@ -31,6 +33,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	schema.Transform(seed.Merge(map[string]map[string]consumers.ValueGenerator{
+		"cats": {
+			"name": generators.Format[generators.Quoted]("{beername}"),
+		},
+	}))
 	generator := schema.Generator(context.Background(), consumers.MySQLInsertWriter(os.Stdout, 100))
 	// generate between 100 and 200 owners
 	generator.Insert("owners", distribution.Range(100, 200), func(g *seed.RowGenerator) {
